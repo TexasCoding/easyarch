@@ -102,6 +102,8 @@ front_install(){
 }
 #}}}
 
+base_install
+front_install
 
 if [[ $MOUNT_SHARED == y ]]; then
     mount_shared
