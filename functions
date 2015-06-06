@@ -160,7 +160,7 @@ wireless_software(){
 #SET LOCALE{{{
 set_locale(){
 	blue_prompt "Setting system locale"
-	arch_chroot "echo \"en_US.UTF-8 UTF-8\" > /etc/locale.gen"
+	echo "en_US.UTF-8 UTF-8" > /mnt/etc/locale.gen
 	arch_chroot "locale-gen"
 	yellow_prompt "Locale has been is set"
 }
@@ -169,7 +169,7 @@ set_locale(){
 #SET LANG{{{
 set_lang(){
 	blue_prompt "Setting system LANG"
-	arch_chroot "echo \"LANG=en_US.UTF-8\" > /etc/locale.conf"
+	echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
 	arch_chroot "export LANG=en_US.UTF-8"
 	yellow_prompt "LANG has been set"
 }
@@ -194,7 +194,7 @@ set_hwclock(){
 #SET HOSTNAME{{{
 set_hostname(){
 	blue_prompt "Setting system hostname"
-	arch_chroot "echo ${HOSTNAME} > /etc/hostname"
+	echo "${HOSTNAME}" > /mnt/etc/hostname
 	yellow_prompt "Hostname has been set"
 	blue_prompt "Setting hostname in /etc/hosts"
 
@@ -209,7 +209,7 @@ hostfile="
 
 # End of file
 "	
-	arch_chroot "echo \"${hostfile}\" > /etc/hosts"
+	echo "${hostfile}" > /mnt/etc/hosts
 	yellow_prompt "/etc/hosts has been modified"
 }
 #}}}
@@ -246,7 +246,7 @@ SigLevel = Never
 Server = http://repo.archlinux.fr/\$arch
 "
 
-	arch_chroot "echo \"$repos\" >> /etc/pacman.conf"
+	echo "$repos" >> /mnt/etc/pacman.conf
 	arch_chroot "pacman -Syy"
 	pacman_install "yaourt rsync"
 	yellow_prompt "AUR support has been enabled"
@@ -387,12 +387,15 @@ video_driver_install(){
 	fi
 
 	if [[ ${VIDEO_DRIVER} == virtualbox ]]; then
-		# arch_chroot "pacman -S virtualbox virtualbox-guest-utils mesa-libgl --noconfirm"
-		# add_module "vboxguest vboxsf vboxvideo" "virtualbox-guest"
-		# add_user_to_group ${username} vboxsf
-		# system_ctl disable ntpd
-		# system_ctl enable vboxservice
-		echo "Virtualbox"
+		blue_prompt "Installing video drivers and Input synaptics"
+		pacman_install "virtualbox-guest-utils mesa-libgl"
+    		add_module "vboxguest vboxsf vboxvideo" "virtualbox-guest"
+    		add_user_to_group ${username} vboxsf
+    		system_ctl disable ntpd
+    		system_ctl enable vboxservice
+		pacman_install "mesa"
+		pacman_install "xf86-input-synaptics xf86-input-keyboard xf86-input-mouse"
+		yellow_prompt "Video drivers and Input synaptics has been setup"
 	elif [[ ${VIDEO_DRIVER} == bumblebee  ]]; then
 		blue_prompt "Installing video drivers and Input synaptics"
 		pacman_install "bumblebee mesa xf86-video-intel nvidia"
@@ -415,12 +418,12 @@ dot_files_config(){
 	blue_prompt "Setting up custom .bashrc"
 	user_chroot "rm .bashrc"
 	user_chroot "git clone https://github.com/jeff10278/dotfiles.git"
-	user_chroot "ln -s dotfiles/.bashrc .bashrc"
-	user_chroot "ln -s dotfiles/.yaourtrc .yaourtrc"
-	user_chroot "ln -s dotfiles/.nanorc .nanorc"
-	user_chroot "ln -s dotfiles/.dircolors .dircolors"
-	user_chroot "ln -s dotfiles/.dircolors_256 .dircolors_256"
-	user_chroot "ln -s dotfiles/fonts.conf fonts.conf"
+	user_chroot "ln -s ~/dotfiles/.bashrc ~/.bashrc"
+	user_chroot "ln -s ~/dotfiles/.yaourtrc ~/.yaourtrc"
+	user_chroot "ln -s ~/dotfiles/.nanorc ~/.nanorc"
+	user_chroot "ln -s ~/dotfiles/.dircolors ~/.dircolors"
+	user_chroot "ln -s ~/dotfiles/.dircolors_256 ~/.dircolors_256"
+	user_chroot "ln -s ~/dotfiles/fonts.conf ~/fonts.conf"
 	yellow_prompt "dotfiles have been setup"
 }
 #}}}
@@ -428,12 +431,12 @@ dot_files_config(){
 #MOUNT SHARED{{{
 mount_shared(){
 	blue_prompt "Listing drives with UUID."
-	user_chroot "lsblk -f"
+	lsblk -f
 	echo -e "Enter Shared UUID: "
 	read UUID
 
 	arch_chroot "gpasswd -a ${USER_NAME} disk"
-	arch_chroot "echo 'UUID=${UUID} /run/media/${USER_NAME}/Shared ntfs-3g uid=${USER_NAME},gid=users,dmask=022,fmask=133 0 0' >> /etc/fstab"
+	echo "UUID=${UUID} /run/media/${USER_NAME}/Shared ntfs-3g uid=${USER_NAME},gid=users,dmask=022,fmask=133 0 0" >> /mnt/etc/fstab
 	
 	user_chroot "ntfs-3g UUID=${UUID} /run/media/${USER_NAME}/Shared"
 
@@ -457,6 +460,21 @@ install_rbenv_ruby(){
 	user_chroot "exec $SHELL"
 	user_chroot "git clone https://github.com/sstephenson/rbenv-gem-rehash.git ~/.rbenv/plugins/rbenv-gem-rehash"
 	yellow_prompt "RBENV has been installed"
+}
+#}}}
+
+#INSTALL VIRTUALBOX{{{
+install_virtualbox(){
+	pacman_install "virtualbox"
+vbox_kernal="
+vboxdrv
+vboxnetadp
+vboxnetflt
+vboxpci
+"
+
+	echo "${vbox_kernal}" > /mnt/etc/modules-load.d/virtualbox.conf
+	arch_chroot "gpasswd -a ${USER_NAME} vboxusers"
 }
 #}}}
 
@@ -527,7 +545,7 @@ gtk-xft-hintstyle=\"hintfull\"
 gtk-xft-rgba=\"rgb\"
 "
 	user_chroot "touch ~/.gtkrc-2.0"
-	user_chroot "echo \"$gtk_settings\" > ~/.gtkrc-2.0"	
+	echo "${gtk_settings}" > /mnt/home/${USER_NAME}/.gtkrc-2.0	
 	yellow_prompt "Themes fonts and icon have been installed"
 }
 #}}}
@@ -539,7 +557,6 @@ install_myawesome(){
 	pacman_install "awesome"
 	yaourt_install "lain-git"
 
-	user_chroot "$username" "mkdir -p ~/.config/awesome/"
 	user_chroot "git clone https://github.com/jeff10278/myawesome.git"
 	user_chroot "ln -s ~/myawesome ~/.config/awesome"
 
@@ -602,7 +619,7 @@ Section \"InputClass\"
 EndSection
 "
 	arch_chroot "touch /etc/X11/xorg.conf.d/50-synaptics.conf"
-	arch_chroot "echo \"${synaptics_settings} \" > /etc/X11/xorg.conf.d/50-synaptics.conf"
+	echo "${synaptics_settings} " > /mnt/etc/X11/xorg.conf.d/50-synaptics.conf
 	yellow_prompt "Touchpad has been set"
 }
 #}}}

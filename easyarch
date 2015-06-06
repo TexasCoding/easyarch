@@ -98,11 +98,9 @@ dot_files_config
 
 install_audio_drivers
 
+install_common_apps
+
 install_themes_fonts_icons
-
-mount_shared
-
-default_directories
 
 install_networkmanager
 
@@ -112,7 +110,9 @@ setup_touchpad
 
 install_lightdm
 
-install_common_apps
+mount_shared
+
+default_directories
 
 install_flash
 
