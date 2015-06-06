@@ -126,7 +126,7 @@ install_mirrorlist_live(){
 install_mirrorlist_system(){
 	blue_prompt "Setting up mirrorlist"
 	pacman_install "reflector"
-	arch_chroot "reflector --verbose --country \"${MIRRORLIST_COUNTRY}\" -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist"
+	arch_chroot "reflector --verbose --country '${MIRRORLIST_COUNTRY}' -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist"
 	yellow_prompt "Mirrorlist is set"
 }
 #}}}
@@ -258,9 +258,9 @@ git_install(){
 	blue_prompt "Installing GIT"
 	pacman_install "git openssh"
 	user_chroot "git config --global color.ui true"
-	user_chroot "git config --global user.name \"${FULL_NAME}\""
-	user_chroot "git config --global user.email \"${EMAIL}\""
-	user_chroot "ssh-keygen -t rsa -C \"${EMAIL}\""
+	user_chroot "git config --global user.name '${FULL_NAME}'"
+	user_chroot "git config --global user.email  '${EMAIL}'"
+	user_chroot "ssh-keygen -t rsa -C '${EMAIL}'"
 	yellow_prompt "GIT has been installed"
 }
 #}}}
@@ -364,11 +364,8 @@ select_partition(){
 #SETUP PARTITIONS{{{
 setup_partitions(){
 	select_device
-
 	select_partition "root"
-
 	select_partition "swap"
-
 	mount $ROOT_PARTITION /mnt
 }
 #}}}
@@ -452,11 +449,11 @@ mount_shared(){
 install_rbenv_ruby(){
 	blue_prompt "Installing RBENV"
 	user_chroot "git clone git://github.com/sstephenson/rbenv.git .rbenv"
-	user_chroot "echo 'export PATH=\"$HOME/.rbenv/bin:$PATH\"' >> ~/.bashrc"
-	user_chroot "echo 'eval \"$(rbenv init -)\"' >> ~/.bashrc"
+	echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> /mnt/home/${USER_NAME}/.bashrc
+	echo 'eval "$(rbenv init -)"' >> /mnt/home/${USER_NAME}/.bashrc
 	user_chroot "exec $SHELL"
 	user_chroot "git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build"
-	user_chroot "echo 'export PATH=\"$HOME/.rbenv/plugins/ruby-build/bin:$PATH\"' >> ~/.bashrc"
+	echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> /mnt/home/${USER_NAME}/.bashrc
 	user_chroot "exec $SHELL"
 	user_chroot "git clone https://github.com/sstephenson/rbenv-gem-rehash.git ~/.rbenv/plugins/rbenv-gem-rehash"
 	yellow_prompt "RBENV has been installed"
