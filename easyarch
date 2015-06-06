@@ -1,0 +1,127 @@
+#! /bin/bash
+
+# COLORS {{{
+    Bold=$(tput bold)
+    Underline=$(tput sgr 0 1)
+    Reset=$(tput sgr0)
+    # Regular Colors
+    Red=$(tput setaf 1)
+    Green=$(tput setaf 2)
+    Yellow=$(tput setaf 3)
+    Blue=$(tput setaf 4)
+    Purple=$(tput setaf 5)
+    Cyan=$(tput setaf 6)
+    White=$(tput setaf 7)
+    # Bold
+    BRed=${Bold}$(tput setaf 1)
+    BGreen=${Bold}$(tput setaf 2)
+    BYellow=${Bold}$(tput setaf 3)
+    BBlue=${Bold}$(tput setaf 4)
+    BPurple=${Bold}$(tput setaf 5)
+    BCyan=${Bold}$(tput setaf 6)
+    BWhite=${Bold}$(tput setaf 7)
+  #}}}
+
+VERSION="0.0.1"
+
+ARCHI=`uname -m`     		# Display whether 32 or 64 bit system
+SYSTEM="Unknown"     	# Display whether system is BIOS or UEFI. Default is "unknown"
+LOCALE="en_US.UTF-8"  	# System locale. Default is "en_US.UTF-8"
+ROOT_PART=""  	               # Root partition
+
+MOUNTPOINT="/mnt"       	 # Installation
+MOUNT_TYPE="/dev/"           	 # "/dev/" for standard partitions, "/dev/mapper" for LVM
+
+echo "${BCyan}Enter your full name:${Reset}"
+read FULL_NAME
+
+echo "${BCyan}Enter your email for GIT:${Reset}"
+read EMAIL
+
+echo "${BCyan}Enter your hostname:${Reset}"
+read HOSTNAME
+
+echo "${BCyan}Enter your username:${Reset}"
+read USER_NAME
+
+echo "${BCyan}Enter your password:${Reset}"
+read PASSWORD
+
+if [[ -f `pwd`/functions ]]; then
+  source functions
+else
+  echo "missing file: functions"
+  exit 1
+fi
+
+mirrorlist
+
+install_mirrorlist_live
+
+setup_partitions
+
+install_base
+
+generate_fstab
+
+wireless_software
+
+set_locale
+
+set_lang
+
+set_localtime
+
+set_hwclock
+
+set_hostname
+
+set_root_password
+
+add_user
+
+edit_sudoers
+
+install_mirrorlist_system
+
+install_grub
+
+aur_support
+
+install_xorg
+
+video_driver_install
+
+git_install
+
+dot_files_config
+
+install_audio_drivers
+
+install_themes_fonts_icons
+
+mount_shared
+
+default_directories
+
+install_networkmanager
+
+install_myawesome
+
+setup_touchpad
+
+install_lightdm
+
+install_common_apps
+
+install_flash
+
+install_tlp
+
+install_preload
+
+mkinitcpio_run
+
+blue_prompt "Basic install is complete"
+yellow_prompt "You must run ./finalize to complete installation"
+read -p "${BPurple}Press [Enter] to exit and reboot${Reset}"

@@ -1,0 +1,638 @@
+#! /bin/bash
+
+#PROMPTS{{{
+	#BLUE {{{
+	blue_prompt(){
+	echo "${BCyan}${1}.${Reset}"
+	echo ""
+	sleep 1
+	}	
+	#}}}
+	#YELLOW {{{
+	yellow_prompt(){
+	echo "${BYellow}${1}.${Reset}"
+	echo ""
+	sleep 1
+	}	
+	#}}}
+	#SPACE {{{
+	space(){
+	echo ""
+	sleep 1
+	}	
+	#}}}
+#}}}
+
+
+#ARCH-CHRROT{{{
+arch_chroot() { 
+	arch-chroot /mnt /bin/bash -c "$1"
+}
+#}}}
+
+#ARCH-CHRROT{{{
+user_chroot() { 
+	arch_chroot "su - ${USER_NAME} -c '$1'"
+}
+#}}}
+
+#PACMAN INSTALL{{{
+pacman_install(){
+	arch_chroot "pacman -S ${1} --noconfirm"
+}
+#}}}
+
+#YAOURT INSTALL{{{
+yaourt_install(){
+	user_chroot "yaourt -S ${1} --noconfirm"
+}
+#}}}
+
+#SYSTEMCTL ENABLE{{{
+systemctl_enable(){
+	arch_chroot "systemctl enable ${1}.service"
+}
+#}}}
+
+#SYSTEMCTL MASK{{{
+systemctl_mask(){
+	arch_chroot "systemctl mask ${1}.service"
+}
+#}}}
+
+#SET ROOT PASSWORD{{{
+set_root_password(){
+	blue_prompt "Setting root password to '${PASSWORD}'"
+	arch_chroot "echo -e \"${PASSWORD}\n${PASSWORD}\" | passwd"
+	yellow_prompt "Root password has been set to '${PASSWORD}'"
+}
+#}}}
+
+#ADD USER{{{
+add_user(){
+	blue_prompt "Creating user '${USER_NAME}' with password '${PASSWORD}'"
+	arch_chroot "useradd -m -g users -G wheel,storage,power  -s  /bin/bash ${USER_NAME}"
+	arch_chroot "echo -e \"${PASSWORD}\n${PASSWORD}\" | passwd \"${USER_NAME}\""
+	yellow_prompt "User '${USER_NAME}' with password '${PASSWORD}' has been created"
+}
+#}}}
+
+contains_element() { #{{{
+	#check if an element exist in a string
+	for e in "${@:2}"; do [[ $e == $1 ]] && break; done;
+} #}}}
+
+read_input_text() { #{{{
+	# check for yes or no
+	read -p "$1 [y/N]: " OPTION
+	echo ""
+	OPTION=`echo "$OPTION" | tr '[:upper:]' '[:lower:]'`
+
+} #}}}
+
+# SETUP MIRRORLIST
+mirrorlist(){
+	local countries_name=("Australia" "Austria" "Belarus" "Belgium" "Brazil" "Bulgaria" "Canada" "Chile" "China" "Colombia" "Czech Republic" "Denmark" "Estonia" "Finland" "France" "Germany" "Greece" "Hungary" "India" "Ireland" "Israel" "Italy" "Japan" "Kazakhstan" "Korea" "Latvia" "Luxembourg" "Macedonia" "Netherlands" "New Caledonia" "New Zealand" "Norway" "Poland" "Portugal" "Romania" "Russian" "Serbia" "Singapore" "Slovakia" "South Africa" "Spain" "Sri Lanka" "Sweden" "Switzerland" "Taiwan" "Turkey" "Ukraine" "United Kingdom" "United States" "Uzbekistan" "Viet Nam")
+	country_list(){
+		blue_prompt "Select your mirrorlist country"
+		select country_name in "${countries_name[@]}"; do
+			if contains_element "$country_name" "${countries_name[@]}"; then
+				MIRRORLIST_COUNTRY=$country_name
+				break
+			else
+				invalid_option
+			fi
+		done
+	}
+
+	OPTION=n
+	while [[ $OPTION != y ]]; do
+		country_list
+		read_input_text "Confirm mirrorlist country: ${MIRRORLIST_COUNTRY}"
+	done
+}
+# END SETUP MIRRORLIST
+
+#INSTALL MIRRORLIST LIVE{{{
+install_mirrorlist_live(){
+	blue_prompt "Setting up mirrorlist on live cd"
+	pacman -S reflector --noconfirm
+	reflector --verbose --country "${MIRRORLIST_COUNTRY}" -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist
+	yellow_prompt "Mirrorlist is set on live cd"
+}
+#}}}
+
+#INSTALL MIRRORLIST SYSTEM{{{
+install_mirrorlist_system(){
+	blue_prompt "Setting up mirrorlist"
+	pacman_install "reflector"
+	arch_chroot "reflector --verbose --country \"${MIRRORLIST_COUNTRY}\" -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist"
+	yellow_prompt "Mirrorlist is set"
+}
+#}}}
+
+#INSTALL BASE{{{
+install_base(){
+	blue_prompt "Installing the base system at mount point /mnt"
+	pacstrap /mnt base base-devel
+	yellow_prompt "Base install is complete"
+}
+#}}}
+
+#GENERATE FSTAB{{{
+generate_fstab(){
+	blue_prompt "Generating FSTAB"
+	genfstab -U -p /mnt >> /mnt/etc/fstab
+	blue_prompt "Now view FSTAB to check for errors"
+	nano /mnt/etc/fstab
+	yellow_prompt "FSTAB generation completed"
+}
+#}}}
+
+#WIRELESS SOFTWARE{{{
+wireless_software(){
+	blue_prompt "Installing wireless software"
+	pacman_install "iw wireless_tools wpa_actiond wpa_supplicant dialog reflector"
+	yellow_prompt "Wireless software installed"
+}
+#}}}
+
+#SET LOCALE{{{
+set_locale(){
+	blue_prompt "Setting system locale"
+	arch_chroot "echo \"en_US.UTF-8 UTF-8\" > /etc/locale.gen"
+	arch_chroot "locale-gen"
+	yellow_prompt "Locale has been is set"
+}
+#}}}
+
+#SET LANG{{{
+set_lang(){
+	blue_prompt "Setting system LANG"
+	arch_chroot "echo \"LANG=en_US.UTF-8\" > /etc/locale.conf"
+	arch_chroot "export LANG=en_US.UTF-8"
+	yellow_prompt "LANG has been set"
+}
+#}}}
+
+#SET LOCALTIME{{{
+set_localtime(){
+	blue_prompt "Setting the system local timezone"
+	arch_chroot "ln -s /usr/share/zoneinfo/America/Chicago /etc/localtime"
+	yellow_prompt "Timezone has been set"
+}
+#}}}
+
+#SET HARDWARE CLOCK{{{
+set_hwclock(){
+	blue_prompt "Setting the hardware clock"
+	arch_chroot "hwclock --systohc --utc"
+	yellow_prompt "Hardware clock has been set"
+}
+#}}}
+
+#SET HOSTNAME{{{
+set_hostname(){
+	blue_prompt "Setting system hostname"
+	arch_chroot "echo ${HOSTNAME} > /etc/hostname"
+	yellow_prompt "Hostname has been set"
+	blue_prompt "Setting hostname in /etc/hosts"
+
+hostfile="
+#
+# /etc/hosts: static lookup table for host names
+#
+
+#<ip-address>   <hostname.domain.org>   <hostname>
+127.0.0.1       localhost.localdomain   ${HOSTNAME}
+::1             localhost.localdomain   ${HOSTNAME}
+
+# End of file
+"	
+	arch_chroot "echo \"${hostfile}\" > /etc/hosts"
+	yellow_prompt "/etc/hosts has been modified"
+}
+#}}}
+
+#EDIT SUDOERS{{{
+edit_sudoers(){
+	blue_prompt "Edit sudoers file 'remove comment from wheel ALL=(ALL)'"
+	arch_chroot "EDITOR=nano visudo"
+	yellow_prompt "Sudoers file has been updated"
+}
+#}}}
+
+#INSTALL GRUB{{{
+install_grub(){
+	blue_prompt "Installing GRUB"
+	pacman_install "sudo bash-completion grub os-prober"
+	arch_chroot "grub-install --target=i386-pc --recheck $BOOT_MOUNTPOINT"
+	arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
+	yellow_prompt "GRUB has been installed"
+}
+#}}}
+
+#AUR SUPPORT{{{
+aur_support(){
+	blue_prompt "Adding AUR and Multilib support"
+
+repos="
+
+[multilib]
+Include = /etc/pacman.d/mirrorlist
+
+[archlinuxfr]
+SigLevel = Never
+Server = http://repo.archlinux.fr/\$arch
+"
+
+	arch_chroot "echo \"$repos\" >> /etc/pacman.conf"
+	arch_chroot "pacman -Syy"
+	pacman_install "yaourt rsync"
+	yellow_prompt "AUR support has been enabled"
+}
+#}}}
+
+#GIT INSTALL{{{
+git_install(){
+	blue_prompt "Installing GIT"
+	pacman_install "git openssh"
+	user_chroot "git config --global color.ui true"
+	user_chroot "git config --global user.name \"${FULL_NAME}\""
+	user_chroot "git config --global user.email \"${EMAIL}\""
+	user_chroot "ssh-keygen -t rsa -C \"${EMAIL}\""
+	yellow_prompt "GIT has been installed"
+}
+#}}}
+
+#INSTALL XORG{{{
+install_xorg(){
+	blue_prompt "Install XORG to prepare for desktop"
+	pacman_install "xorg-server xorg-server-utils xorg-xinit xorg-twm xorg-xclock xterm"
+	yellow_prompt "XORG has been installed"
+}
+#}}}
+
+#SELECT DEVICE {{{
+select_device(){
+	blue_prompt "Select your device (ex: /dev/sda)"
+	dev_lists(){
+		devices_list=(`lsblk -d | awk '{print "/dev/" $1}' | grep 'sd\|hd\|vd'`);
+	
+		select device in "${devices_list[@]}"; do
+			if contains_element "${device}" "${devices_list[@]}"; then
+				break
+			else
+				invalid_option
+			fi
+		done
+	}
+	
+
+	OPTION=n
+	while [[ $OPTION != y ]]; do
+		dev_lists
+		read_input_text "Confirm device: $device"
+	done
+
+	cfdisk $device
+
+	BOOT_MOUNTPOINT=$device
+}
+#}}}
+
+#SELECT PARTITIONS{{{
+select_partition(){
+	blue_prompt "Select your /$1 partition (ex: /dev/sda1)"
+
+	block_list=(`lsblk | grep 'part\|lvm' | awk '{print substr($1,3)}'`)
+
+	# check if there is no partition
+	if [[ ${#block_list[@]} -eq 0 ]]; then
+		echo "No partition found.. Format disk partions.."
+		sleep 2
+		select_device
+	fi
+
+	#PARTION LIST{{{
+	part_list(){
+		partitions_list=()
+		for OPT in ${block_list[@]}; do
+			check_lvm=`echo $OPT | grep lvm`
+
+			if [[ -z $check_lvm ]]; then
+				partitions_list+=("/dev/$OPT")
+			else
+				partitions_list+=("/dev/mapper/$OPT")
+			fi
+		done
+
+		select partition in "${partitions_list[@]}"; do
+			if contains_element "$partition" "${partitions_list[@]}"; then
+				partition=$partition
+				break
+			else
+				invalid_option
+			fi
+		done
+	}	
+	#}}}
+	
+
+	OPTION=n
+	while [[ $OPTION != y ]]; do
+		part_list
+		read_input_text "Confirm $1: $partition"
+	done
+
+
+	if [[ $1 == "root" ]]; then
+		blue_prompt "You are about to format $partition '/root' to ext4"
+		mkfs.ext4 $partition
+		ROOT_PARTITION=$partition
+		yellow_prompt "$partition has been formatted to ext4"
+
+	elif [[ $1 == "swap" ]]; then
+		blue_prompt "You are about to format $partition to swap"
+		mkswap $partition
+		swapon $partition
+		yellow_prompt "$partition has been formatted to swap"
+	fi	
+}
+#}}}
+
+#SETUP PARTITIONS{{{
+setup_partitions(){
+	select_device
+
+	select_partition "root"
+
+	select_partition "swap"
+
+	mount $ROOT_PARTITION /mnt
+}
+#}}}
+
+#VIDEO DRIVER INSTALL{{{
+video_driver_install(){
+	pacman_install "dmidecode "
+
+	local _vga=`lspci | grep VGA | tr "[:upper:]" "[:lower:]"`
+	local _vga_length=`lspci | grep VGA | wc -l`
+	if [[ -n $(dmidecode --type 1 | grep VirtualBox) ]]; then
+		VIDEO_DRIVER="virtualbox"
+
+	elif [[ $_vga_length -eq 2 ]] && [[ -n $(echo ${_vga} | grep "nvidia") ]]; then
+		VIDEO_DRIVER="bumblebee"
+	fi
+
+	if [[ ${VIDEO_DRIVER} == virtualbox ]]; then
+		# arch_chroot "pacman -S virtualbox virtualbox-guest-utils mesa-libgl --noconfirm"
+		# add_module "vboxguest vboxsf vboxvideo" "virtualbox-guest"
+		# add_user_to_group ${username} vboxsf
+		# system_ctl disable ntpd
+		# system_ctl enable vboxservice
+		echo "Virtualbox"
+	elif [[ ${VIDEO_DRIVER} == bumblebee  ]]; then
+		blue_prompt "Installing video drivers and Input synaptics"
+		pacman_install "bumblebee mesa xf86-video-intel nvidia"
+		pacman_install "bbswitch primus mesa-demos"
+		echo ""
+		blue_prompt "Adding ${USER_NAME} to bumblebee group"
+		arch_chroot "gpasswd -a ${USER_NAME} bumblebee"
+		echo ""
+		blue_prompt "Enabling Bumblebee"
+		systemctl_enable "bumblebeed"
+		pacman_install "xf86-input-synaptics xf86-input-keyboard xf86-input-mouse"
+		yellow_prompt "Video drivers and Input synaptics has been setup"
+	fi
+
+}
+#}}}
+
+#DOT FILES CONFIG{{{
+dot_files_config(){
+	blue_prompt "Setting up custom .bashrc"
+	user_chroot "rm .bashrc"
+	user_chroot "git clone https://github.com/jeff10278/dotfiles.git"
+	user_chroot "ln -s dotfiles/.bashrc .bashrc"
+	user_chroot "ln -s dotfiles/.yaourtrc .yaourtrc"
+	user_chroot "ln -s dotfiles/.nanorc .nanorc"
+	user_chroot "ln -s dotfiles/.dircolors .dircolors"
+	user_chroot "ln -s dotfiles/.dircolors_256 .dircolors_256"
+	user_chroot "ln -s dotfiles/fonts.conf fonts.conf"
+	yellow_prompt "dotfiles have been setup"
+}
+#}}}
+
+#MOUNT SHARED{{{
+mount_shared(){
+	blue_prompt "Listing drives with UUID."
+	user_chroot "lsblk -f"
+	echo -e "Enter Shared UUID: "
+	read UUID
+
+	arch_chroot "gpasswd -a ${USER_NAME} disk"
+	arch_chroot "echo 'UUID=${UUID} /run/media/${USER_NAME}/Shared ntfs-3g uid=${USER_NAME},gid=users,dmask=022,fmask=133 0 0' >> /etc/fstab"
+	
+	user_chroot "ntfs-3g UUID=${UUID} /run/media/${USER_NAME}/Shared"
+
+	blue_prompt "Create link to Shared Dropbox folder."
+	user_chroot "ln -s /run/media/${USER_NAME}/Shared/Dropbox ~/Dropbox"
+	blue_prompt "Create link to Shared Downloads folder."
+	user_chroot "ln -s /run/media/${USER_NAME}/Shared/Downloads ~/Downloads"
+	yellow_prompt "Shared folder has been setup"
+}
+#}}}
+
+#INSTALL RBENV RUBY{{{
+install_rbenv_ruby(){
+	blue_prompt "Installing RBENV"
+	user_chroot "git clone git://github.com/sstephenson/rbenv.git .rbenv"
+	user_chroot "echo 'export PATH=\"$HOME/.rbenv/bin:$PATH\"' >> ~/.bashrc"
+	user_chroot "echo 'eval \"$(rbenv init -)\"' >> ~/.bashrc"
+	user_chroot "exec $SHELL"
+	user_chroot "git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build"
+	user_chroot "echo 'export PATH=\"$HOME/.rbenv/plugins/ruby-build/bin:$PATH\"' >> ~/.bashrc"
+	user_chroot "exec $SHELL"
+	user_chroot "git clone https://github.com/sstephenson/rbenv-gem-rehash.git ~/.rbenv/plugins/rbenv-gem-rehash"
+	yellow_prompt "RBENV has been installed"
+}
+#}}}
+
+#NVM INSTALL{{{
+nvm_install(){
+	blue_prompt "Installing NVM"
+	user_chroot "curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.25.4/install.sh | bash"
+	yellow_prompt "NVM has been installed"
+}
+#}}}
+
+#INSTALL TLP{{{
+install_tlp(){
+	blue_prompt "Installing TLP"
+	pacman_install "tlp"
+	systemctl_enable "tlp"
+	systemctl_enable "tlp-sleep"
+	systemctl_mask "systemd-rfkill@"
+	yellow_prompt "TLP is installed and enabled"
+}
+#}}}
+
+#INSTALL PRELOAD{{{
+install_preload(){
+	blue_prompt "Installing PreLoad"
+	yaourt_install "preload"
+	systemctl_enable "preload"
+	yellow_prompt "PreLoad has been installed"
+}
+#}}}
+
+#INSTALL AUDIO DRIVERS{{{
+install_audio_drivers(){
+	blue_prompt "Installing Audio drivers"
+	pacman_install "alsa-utils alsa-plugins"
+	pacman_install "pulseaudio pulseaudio-alsa"
+	pacman_install "lib32-libpulse lib32-alsa-plugins"
+	pacman_install "pavucontrol"
+	yellow_prompt "Audio drivers installed"
+}
+#}}}
+
+#INSTALL THEMES FONTS ICONS{{{
+install_themes_fonts_icons(){
+	blue_prompt "Installing themes fonts and icons"
+	pacman_install "ttf-dejavu ttf-liberation ttf-freefont ttf-bitstream-vera adobe-source-sans-pro-fonts adobe-source-code-pro-fonts adobe-source-serif-pro-fonts gtk-theme-orion gnome-icon-theme lxappearance"
+	yaourt_install "awoken-icons"
+	
+gtk_settings="
+# DO NOT EDIT! This file will be overwritten by LXAppearance.
+# Any customization should be done in ~/.gtkrc-2.0.mine instead.
+
+include \"/home/jeff102/.gtkrc-2.0.mine\"
+gtk-theme-name=\"Orion\"
+gtk-icon-theme-name=\"AwOken\"
+gtk-font-name=\"Source Sans Pro 10\"
+gtk-cursor-theme-name=\"Adwaita\"
+gtk-cursor-theme-size=0
+gtk-toolbar-style=GTK_TOOLBAR_BOTH
+gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
+gtk-button-images=1
+gtk-menu-images=1
+gtk-enable-event-sounds=1
+gtk-enable-input-feedback-sounds=1
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle=\"hintfull\"
+gtk-xft-rgba=\"rgb\"
+"
+	user_chroot "touch ~/.gtkrc-2.0"
+	user_chroot "echo \"$gtk_settings\" > ~/.gtkrc-2.0"	
+	yellow_prompt "Themes fonts and icon have been installed"
+}
+#}}}
+
+#INSTALL MYAWESOME{{{
+install_myawesome(){
+	blue_prompt "Installing My Custom Awesome WM."
+	blue_prompt "Will be asked for github credintials"
+	pacman_install "awesome"
+	yaourt_install "lain-git"
+
+	user_chroot "$username" "mkdir -p ~/.config/awesome/"
+	user_chroot "git clone https://github.com/jeff10278/myawesome.git"
+	user_chroot "ln -s ~/myawesome ~/.config/awesome"
+
+	pacman_install "archlinux-xdg-menu"
+	user_chroot "xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu > ~/.config/awesome/archmenu.lua"
+	yellow_prompt "Custom Awesome WM has been installed"
+}
+#}}}
+
+#INSTALL LIGHTDM{{{
+install_lightdm(){
+	blue_prompt "Installing Lightdm"
+	pacman_install "lightdm lightdm-gtk-greeter"
+	systemctl_enable "lightdm"
+	yellow_prompt "Lightdm has been installed"
+}
+#}}}
+
+#INSTALL NETWORKMANAGER{{{
+install_networkmanager(){
+	blue_prompt "Installing NetworkManager"
+	pacman_install "networkmanager modemmanager usb_modeswitch network-manager-applet"
+	systemctl_enable "NetworkManager"
+	systemctl_enable "ModemManager"
+	yellow_prompt "NetworkManager has been installed and enabled"
+}
+#}}}
+
+#DEFAULT DIRECTORIES{{{
+default_directories(){
+	blue_prompt "Creating default user directories"
+	pacman_install "xdg-user-dirs"
+	user_chroot "xdg-user-dirs-update"
+	yellow_prompt "Default directories setup"
+}
+#}}}
+
+#SETUP TOUCHPAD{{{
+setup_touchpad(){
+	blue_prompt "Setting up touchpad synaptics"
+synaptics_settings="
+Section \"InputClass\"
+    Identifier \"touchpad\"
+    Driver \"synaptics\"
+    MatchIsTouchpad \"on\"
+        Option \"TapButton1\" \"-1\"
+        Option \"TapButton2\" \"-1\"
+        Option \"TapButton3\" \"-1\"
+        Option \"VertEdgeScroll\" \"on\"
+        Option \"VertTwoFingerScroll\" \"on\"
+        Option \"HorizEdgeScroll\" \"on\"
+        Option \"HorizTwoFingerScroll\" \"on\"
+        Option \"CircularScrolling\" \"on\"
+        Option \"CircScrollTrigger\" \"2\"
+        Option \"EmulateTwoFingerMinZ\" \"40\"
+        Option \"EmulateTwoFingerMinW\" \"8\"
+        Option \"CoastingSpeed\" \"0\"
+        Option \"FingerLow\" \"35\"
+        Option \"FingerHigh\" \"40\"
+EndSection
+"
+	arch_chroot "touch /etc/X11/xorg.conf.d/50-synaptics.conf"
+	arch_chroot "echo \"${synaptics_settings} \" > /etc/X11/xorg.conf.d/50-synaptics.conf"
+	yellow_prompt "Touchpad has been set"
+}
+#}}}
+
+#INSTALL COMMON APPS{{{
+install_common_apps(){
+	blue_prompt "Installing common applications and tools"
+	pacman_install "firefox virtualbox bleachbit thunderbird terminator leafpad vlc libbluray libdvdcss gimp pcmanfm jre8-openjdk gvfs udisks imagemagick"
+	pacman_install  "pdfsam libreoffice-fresh shotwell evince file-roller unzip zip p7zip unrar gparted uget deluge"
+	pacman_install "hddtemp lm_sensors smartmontools terminus-font btrfs-progs dosfstools exfat-utils f2fs-tools gpart jfsutils mtools nilfs-utils ntfs-3g reiserfsprogs xfsprogs"
+	yaourt_install "dmenu2 google-chrome sublime-text-dev dropbox"
+	yellow_prompt "Applications and tools have been installed"
+}
+#}}}
+
+#INSTALL FLASH AND HAL{{{
+install_flash(){
+	blue_prompt "Installing Flash and Hal"
+	pacman_install "flashplugin"
+	yaourt_install "hal"
+	systemctl_enable "hal"
+	yellow_prompt "Flash and HAL have been installed"
+}
+#}}}
+
+#MKINITCPIO RUN{{{
+mkinitcpio_run(){
+	blue_prompt "Running MKINITCPIO"
+	arch_chroot "mkinitcpio -p linux"
+	yellow_prompt "MKINITCPIO completed"
+}
+#}}}
+	
