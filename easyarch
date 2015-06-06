@@ -47,6 +47,9 @@ read USER_NAME
 echo "${BCyan}Enter your password:${Reset}"
 read PASSWORD
 
+echo "${BCyan}Will you be mounting a SHARED PARTION?\nEnter 'y' to mount SHARED NTFS partition:${Reset}"
+read MOUNT_SHARED
+
 if [[ -f `pwd`/functions ]]; then
   source functions
 else
@@ -54,71 +57,55 @@ else
   exit 1
 fi
 
-mirrorlist
+#BASE INSTALL{{{
+base_install(){
+    mirrorlist
+    install_mirrorlist_live
+    setup_partitions
+    install_base
+    generate_fstab
+    wireless_software
+    set_locale
+    set_lang
+    set_localtime
+    set_hwclock
+    set_hostname
+    set_root_password
+    add_user
+    edit_sudoers
+    install_mirrorlist_system
+    install_grub
+}
+#}}}
 
-install_mirrorlist_live
+#FRONT INSTALL{{{
+front_install(){
+    git_install
+    dot_files_config
+    aur_support
+    install_xorg
+    install_networkmanager
+    video_driver_install
+    install_lightdm
+    install_audio_drivers
+    install_themes_fonts_icons
+    install_common_apps
+    install_virtualbox
+    install_myawesome
+    setup_touchpad
+    default_directories
+    install_flash
+    install_tlp
+    install_preload
+    nvm_install
+    install_rbenv_ruby
+}
+#}}}
 
-setup_partitions
 
-install_base
-
-generate_fstab
-
-wireless_software
-
-set_locale
-
-set_lang
-
-set_localtime
-
-set_hwclock
-
-set_hostname
-
-set_root_password
-
-add_user
-
-edit_sudoers
-
-install_mirrorlist_system
-
-install_grub
-
-aur_support
-
-install_xorg
-
-video_driver_install
-
-git_install
-
-dot_files_config
-
-install_audio_drivers
-
-install_common_apps
-
-install_themes_fonts_icons
-
-install_networkmanager
-
-install_myawesome
-
-setup_touchpad
-
-install_lightdm
-
-mount_shared
-
-default_directories
-
-install_flash
-
-install_tlp
-
-install_preload
+if [[ $MOUNT_SHARED == y ]]; then
+    mount_shared
+fi
 
 mkinitcpio_run
 

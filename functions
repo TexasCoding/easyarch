@@ -76,19 +76,22 @@ add_user(){
 	yellow_prompt "User '${USER_NAME}' with password '${PASSWORD}' has been created"
 }
 #}}}
-
-contains_element() { #{{{
+#CONTAILNS ELEMENT{{{
+contains_element() { 
 	#check if an element exist in a string
 	for e in "${@:2}"; do [[ $e == $1 ]] && break; done;
-} #}}}
+} 
+#}}}
 
-read_input_text() { #{{{
+#READ INPUT TEXT{{{
+read_input_text() { 
 	# check for yes or no
 	read -p "$1 [y/N]: " OPTION
 	echo ""
 	OPTION=`echo "$OPTION" | tr '[:upper:]' '[:lower:]'`
 
-} #}}}
+} 
+#}}}
 
 # SETUP MIRRORLIST
 mirrorlist(){
@@ -385,12 +388,15 @@ video_driver_install(){
 
 	if [[ ${VIDEO_DRIVER} == virtualbox ]]; then
 		blue_prompt "Installing video drivers and Input synaptics"
-		pacman_install "virtualbox-guest-utils mesa-libgl"
-    		add_module "vboxguest vboxsf vboxvideo" "virtualbox-guest"
-    		add_user_to_group ${username} vboxsf
-    		system_ctl disable ntpd
-    		system_ctl enable vboxservice
-		pacman_install "mesa"
+		pacman_install "xf86-video-vesa virtualbox-guest-utils virtualbox-guest-modules "
+vbox_kernal="
+vboxguest 
+vboxsf
+vboxvideo
+"
+	echo "${vbox_kernal}" > /mnt/etc/modules-load.d/virtualbox.conf
+    		arch_chroot "gpasswd -a ${USER_NAME} vboxsf"
+    		systemctl_enable "vboxservice"
 		pacman_install "xf86-input-synaptics xf86-input-keyboard xf86-input-mouse"
 		yellow_prompt "Video drivers and Input synaptics has been setup"
 	elif [[ ${VIDEO_DRIVER} == bumblebee  ]]; then
@@ -469,8 +475,7 @@ vboxnetadp
 vboxnetflt
 vboxpci
 "
-
-	echo "${vbox_kernal}" > /mnt/etc/modules-load.d/virtualbox.conf
+	echo "${vbox_kernal}" >> /mnt/etc/modules-load.d/virtualbox.conf
 	arch_chroot "gpasswd -a ${USER_NAME} vboxusers"
 }
 #}}}
