@@ -82,6 +82,7 @@ base_install(){
 front_install(){
     git_install
     dot_files_config
+    install_basics
     aur_support
     install_xorg
     install_networkmanager
@@ -102,9 +103,21 @@ front_install(){
 }
 #}}}
 
+cho "${BCyan}Do you want to install base setup? Enter 'y' for yes.${Reset}"
+read BASE_INSTALL
+if [[ $BASE_INSTALL == y ]]; then
+    front_install
+fi
 base_install
-front_install
 
+echo "${BCyan}Do you want to install frontend now? Enter 'y' for yes.${Reset}"
+read FRONT_INSTALL
+if [[ $FRONT_INSTALL == y ]]; then
+    front_install
+fi
+
+echo "${BCyan}Will you be mounting a SHARED PARTION?\nEnter 'y' to mount SHARED NTFS partition:${Reset}"
+read MOUNT_SHARED
 if [[ $MOUNT_SHARED == y ]]; then
     mount_shared
 fi
@@ -114,3 +127,4 @@ mkinitcpio_run
 blue_prompt "Basic install is complete"
 yellow_prompt "You must run ./finalize to complete installation"
 read -p "${BPurple}Press [Enter] to exit and reboot${Reset}"
+exit

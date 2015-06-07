@@ -1,5 +1,12 @@
 #! /bin/bash
 
+if [[ -f `pwd`/files ]]; then
+  source files
+else
+  echo "missing file: files"
+  exit 1
+fi
+
 #PROMPTS{{{
 	#BLUE {{{
 	blue_prompt(){
@@ -8,6 +15,7 @@
 	sleep 1
 	}	
 	#}}}
+
 	#YELLOW {{{
 	yellow_prompt(){
 	echo "${BYellow}${1}.${Reset}"
@@ -15,6 +23,7 @@
 	sleep 1
 	}	
 	#}}}
+
 	#SPACE {{{
 	space(){
 	echo ""
@@ -32,19 +41,19 @@ arch_chroot() {
 
 #ARCH-CHRROT{{{
 user_chroot() { 
-	arch_chroot "su - ${USER_NAME} -c '$1'"
+	arch_chroot "su - ${USER_NAME} -c 'cd /home/${USER_NAME} && $1'"
 }
 #}}}
 
 #PACMAN INSTALL{{{
 pacman_install(){
-	arch_chroot "pacman -S ${1} --noconfirm"
+	arch_chroot "pacman -S ${1} --noconfirm --needed"
 }
 #}}}
 
 #YAOURT INSTALL{{{
 yaourt_install(){
-	user_chroot "yaourt -S ${1} --noconfirm"
+	user_chroot "yaourt -S ${1} --noconfirm --needed"
 }
 #}}}
 
@@ -57,6 +66,12 @@ systemctl_enable(){
 #SYSTEMCTL MASK{{{
 systemctl_mask(){
 	arch_chroot "systemctl mask ${1}.service"
+}
+#}}}
+
+#SYSTEMCTL DISABLE{{{
+systemctl_disable(){
+	arch_chroot "systemctl disable ${1}.service"
 }
 #}}}
 
@@ -76,6 +91,7 @@ add_user(){
 	yellow_prompt "User '${USER_NAME}' with password '${PASSWORD}' has been created"
 }
 #}}}
+
 #CONTAILNS ELEMENT{{{
 contains_element() { 
 	#check if an element exist in a string
@@ -93,7 +109,7 @@ read_input_text() {
 } 
 #}}}
 
-# SETUP MIRRORLIST
+# SETUP MIRRORLIST{{{
 mirrorlist(){
 	local countries_name=("Australia" "Austria" "Belarus" "Belgium" "Brazil" "Bulgaria" "Canada" "Chile" "China" "Colombia" "Czech Republic" "Denmark" "Estonia" "Finland" "France" "Germany" "Greece" "Hungary" "India" "Ireland" "Israel" "Italy" "Japan" "Kazakhstan" "Korea" "Latvia" "Luxembourg" "Macedonia" "Netherlands" "New Caledonia" "New Zealand" "Norway" "Poland" "Portugal" "Romania" "Russian" "Serbia" "Singapore" "Slovakia" "South Africa" "Spain" "Sri Lanka" "Sweden" "Switzerland" "Taiwan" "Turkey" "Ukraine" "United Kingdom" "United States" "Uzbekistan" "Viet Nam")
 	country_list(){
@@ -114,7 +130,7 @@ mirrorlist(){
 		read_input_text "Confirm mirrorlist country: ${MIRRORLIST_COUNTRY}"
 	done
 }
-# END SETUP MIRRORLIST
+#}}}
 
 #INSTALL MIRRORLIST LIVE{{{
 install_mirrorlist_live(){
@@ -200,19 +216,7 @@ set_hostname(){
 	echo "${HOSTNAME}" > /mnt/etc/hostname
 	yellow_prompt "Hostname has been set"
 	blue_prompt "Setting hostname in /etc/hosts"
-
-hostfile="
-#
-# /etc/hosts: static lookup table for host names
-#
-
-#<ip-address>   <hostname.domain.org>   <hostname>
-127.0.0.1       localhost.localdomain   ${HOSTNAME}
-::1             localhost.localdomain   ${HOSTNAME}
-
-# End of file
-"	
-	echo "${hostfile}" > /mnt/etc/hosts
+	echo "${HOSTFILE}" > /mnt/etc/hosts
 	yellow_prompt "/etc/hosts has been modified"
 }
 #}}}
@@ -228,7 +232,7 @@ edit_sudoers(){
 #INSTALL GRUB{{{
 install_grub(){
 	blue_prompt "Installing GRUB"
-	pacman_install "sudo bash-completion grub os-prober"
+	pacman_install "sudo grub os-prober"
 	arch_chroot "grub-install --target=i386-pc --recheck $BOOT_MOUNTPOINT"
 	arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
 	yellow_prompt "GRUB has been installed"
@@ -238,18 +242,7 @@ install_grub(){
 #AUR SUPPORT{{{
 aur_support(){
 	blue_prompt "Adding AUR and Multilib support"
-
-repos="
-
-[multilib]
-Include = /etc/pacman.d/mirrorlist
-
-[archlinuxfr]
-SigLevel = Never
-Server = http://repo.archlinux.fr/\$arch
-"
-
-	echo "$repos" >> /mnt/etc/pacman.conf
+	echo "${MIRRORLIST_REPOS}" >> /mnt/etc/pacman.conf
 	arch_chroot "pacman -Syy"
 	pacman_install "yaourt rsync"
 	yellow_prompt "AUR support has been enabled"
@@ -291,7 +284,6 @@ select_device(){
 		done
 	}
 	
-
 	OPTION=n
 	while [[ $OPTION != y ]]; do
 		dev_lists
@@ -309,7 +301,6 @@ select_partition(){
 	blue_prompt "Select your /$1 partition (ex: /dev/sda1)"
 
 	block_list=(`lsblk | grep 'part\|lvm' | awk '{print substr($1,3)}'`)
-
 	# check if there is no partition
 	if [[ ${#block_list[@]} -eq 0 ]]; then
 		echo "No partition found.. Format disk partions.."
@@ -341,13 +332,11 @@ select_partition(){
 	}	
 	#}}}
 	
-
 	OPTION=n
 	while [[ $OPTION != y ]]; do
 		part_list
 		read_input_text "Confirm $1: $partition"
 	done
-
 
 	if [[ $1 == "root" ]]; then
 		blue_prompt "You are about to format $partition '/root' to ext4"
@@ -389,12 +378,7 @@ video_driver_install(){
 	if [[ ${VIDEO_DRIVER} == virtualbox ]]; then
 		blue_prompt "Installing video drivers and Input synaptics"
 		pacman_install "xf86-video-vesa virtualbox-guest-utils virtualbox-guest-modules "
-vbox_kernal="
-vboxguest 
-vboxsf
-vboxvideo
-"
-	echo "${vbox_kernal}" > /mnt/etc/modules-load.d/virtualbox.conf
+		echo "${VBOX_GUEST}" > /mnt/etc/modules-load.d/virtualbox.conf
     		arch_chroot "gpasswd -a ${USER_NAME} vboxsf"
     		systemctl_enable "vboxservice"
 		pacman_install "xf86-input-synaptics xf86-input-keyboard xf86-input-mouse"
@@ -420,7 +404,7 @@ vboxvideo
 dot_files_config(){
 	blue_prompt "Setting up custom .bashrc"
 	user_chroot "rm .bashrc"
-	user_chroot "git clone https://github.com/jeff10278/dotfiles.git"
+	user_chroot "git clone git://github.com/jeff10278/dotfiles.git"
 	user_chroot "ln -s ~/dotfiles/.bashrc ~/.bashrc"
 	user_chroot "ln -s ~/dotfiles/.yaourtrc ~/.yaourtrc"
 	user_chroot "ln -s ~/dotfiles/.nanorc ~/.nanorc"
@@ -469,13 +453,7 @@ install_rbenv_ruby(){
 #INSTALL VIRTUALBOX{{{
 install_virtualbox(){
 	pacman_install "virtualbox"
-vbox_kernal="
-vboxdrv
-vboxnetadp
-vboxnetflt
-vboxpci
-"
-	echo "${vbox_kernal}" >> /mnt/etc/modules-load.d/virtualbox.conf
+	echo "${VBOX_HOSTS}" >> /mnt/etc/modules-load.d/virtualbox.conf
 	arch_chroot "gpasswd -a ${USER_NAME} vboxusers"
 }
 #}}}
@@ -524,30 +502,8 @@ install_themes_fonts_icons(){
 	blue_prompt "Installing themes fonts and icons"
 	pacman_install "ttf-dejavu ttf-liberation ttf-freefont ttf-bitstream-vera adobe-source-sans-pro-fonts adobe-source-code-pro-fonts adobe-source-serif-pro-fonts gtk-theme-orion gnome-icon-theme lxappearance"
 	yaourt_install "awoken-icons"
-	
-gtk_settings="
-# DO NOT EDIT! This file will be overwritten by LXAppearance.
-# Any customization should be done in ~/.gtkrc-2.0.mine instead.
-
-include \"/home/jeff102/.gtkrc-2.0.mine\"
-gtk-theme-name=\"Orion\"
-gtk-icon-theme-name=\"AwOken\"
-gtk-font-name=\"Source Sans Pro 10\"
-gtk-cursor-theme-name=\"Adwaita\"
-gtk-cursor-theme-size=0
-gtk-toolbar-style=GTK_TOOLBAR_BOTH
-gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
-gtk-button-images=1
-gtk-menu-images=1
-gtk-enable-event-sounds=1
-gtk-enable-input-feedback-sounds=1
-gtk-xft-antialias=1
-gtk-xft-hinting=1
-gtk-xft-hintstyle=\"hintfull\"
-gtk-xft-rgba=\"rgb\"
-"
 	user_chroot "touch ~/.gtkrc-2.0"
-	echo "${gtk_settings}" > /mnt/home/${USER_NAME}/.gtkrc-2.0	
+	echo "${GTK_SETTINGS}" > /mnt/home/${USER_NAME}/.gtkrc-2.0	
 	yellow_prompt "Themes fonts and icon have been installed"
 }
 #}}}
@@ -559,7 +515,7 @@ install_myawesome(){
 	pacman_install "awesome"
 	yaourt_install "lain-git"
 
-	user_chroot "git clone https://github.com/jeff10278/myawesome.git"
+	user_chroot "git clone git://github.com/jeff10278/myawesome.git"
 	user_chroot "ln -s ~/myawesome ~/.config/awesome"
 
 	pacman_install "archlinux-xdg-menu"
@@ -599,39 +555,23 @@ default_directories(){
 #SETUP TOUCHPAD{{{
 setup_touchpad(){
 	blue_prompt "Setting up touchpad synaptics"
-synaptics_settings="
-Section \"InputClass\"
-    Identifier \"touchpad\"
-    Driver \"synaptics\"
-    MatchIsTouchpad \"on\"
-        Option \"TapButton1\" \"-1\"
-        Option \"TapButton2\" \"-1\"
-        Option \"TapButton3\" \"-1\"
-        Option \"VertEdgeScroll\" \"on\"
-        Option \"VertTwoFingerScroll\" \"on\"
-        Option \"HorizEdgeScroll\" \"on\"
-        Option \"HorizTwoFingerScroll\" \"on\"
-        Option \"CircularScrolling\" \"on\"
-        Option \"CircScrollTrigger\" \"2\"
-        Option \"EmulateTwoFingerMinZ\" \"40\"
-        Option \"EmulateTwoFingerMinW\" \"8\"
-        Option \"CoastingSpeed\" \"0\"
-        Option \"FingerLow\" \"35\"
-        Option \"FingerHigh\" \"40\"
-EndSection
-"
 	arch_chroot "touch /etc/X11/xorg.conf.d/50-synaptics.conf"
-	echo "${synaptics_settings} " > /mnt/etc/X11/xorg.conf.d/50-synaptics.conf
+	echo "${SYNAPTIC_SETTINGS} " > /mnt/etc/X11/xorg.conf.d/50-synaptics.conf
 	yellow_prompt "Touchpad has been set"
+}
+#}}}
+
+#INSTALL BASICS{{{
+install_basics(){
+	pacman_install "bash-completion vim hddtemp lm_sensors smartmontools terminus-font btrfs-progs dosfstools exfat-utils f2fs-tools gpart jfsutils mtools nilfs-utils ntfs-3g reiserfsprogs xfsprogs"
 }
 #}}}
 
 #INSTALL COMMON APPS{{{
 install_common_apps(){
 	blue_prompt "Installing common applications and tools"
-	pacman_install "firefox virtualbox bleachbit thunderbird terminator leafpad vlc libbluray libdvdcss gimp pcmanfm jre8-openjdk gvfs udisks imagemagick"
+	pacman_install "firefox bleachbit thunderbird terminator leafpad vlc libbluray libdvdcss gimp pcmanfm jre8-openjdk gvfs udisks imagemagick"
 	pacman_install  "pdfsam libreoffice-fresh shotwell evince file-roller unzip zip p7zip unrar gparted uget deluge"
-	pacman_install "hddtemp lm_sensors smartmontools terminus-font btrfs-progs dosfstools exfat-utils f2fs-tools gpart jfsutils mtools nilfs-utils ntfs-3g reiserfsprogs xfsprogs"
 	yaourt_install "dmenu2 google-chrome sublime-text-dev dropbox"
 	yellow_prompt "Applications and tools have been installed"
 }

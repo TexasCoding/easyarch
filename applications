@@ -1,0 +1,4 @@
+INTERNET_APPS=(
+		'firefox'
+		'google-chrome' 
+	)

@@ -1,0 +1,73 @@
+SYNAPTIC_SETTINGS="
+Section \"InputClass\"
+    Identifier \"touchpad\"
+    Driver \"synaptics\"
+    MatchIsTouchpad \"on\"
+        Option \"TapButton1\" \"-1\"
+        Option \"TapButton2\" \"-1\"
+        Option \"TapButton3\" \"-1\"
+        Option \"VertEdgeScroll\" \"on\"
+        Option \"VertTwoFingerScroll\" \"on\"
+        Option \"HorizEdgeScroll\" \"on\"
+        Option \"HorizTwoFingerScroll\" \"on\"
+        Option \"CircularScrolling\" \"on\"
+        Option \"CircScrollTrigger\" \"2\"
+        Option \"EmulateTwoFingerMinZ\" \"40\"
+        Option \"EmulateTwoFingerMinW\" \"8\"
+        Option \"CoastingSpeed\" \"0\"
+        Option \"FingerLow\" \"35\"
+        Option \"FingerHigh\" \"40\"
+EndSection
+"
+GTK_SETTINGS="
+# DO NOT EDIT! This file will be overwritten by LXAppearance.
+# Any customization should be done in ~/.gtkrc-2.0.mine instead.
+
+include \"/home/jeff102/.gtkrc-2.0.mine\"
+gtk-theme-name=\"Orion\"
+gtk-icon-theme-name=\"AwOken\"
+gtk-font-name=\"Source Sans Pro 10\"
+gtk-cursor-theme-name=\"Adwaita\"
+gtk-cursor-theme-size=0
+gtk-toolbar-style=GTK_TOOLBAR_BOTH
+gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
+gtk-button-images=1
+gtk-menu-images=1
+gtk-enable-event-sounds=1
+gtk-enable-input-feedback-sounds=1
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle=\"hintfull\"
+gtk-xft-rgba=\"rgb\"
+"
+VBOX_HOSTS="
+vboxdrv
+vboxnetadp
+vboxnetflt
+vboxpci
+"
+VBOX_GUEST="
+vboxguest 
+vboxsf
+vboxvideo
+"
+MIRRORLIST_REPOS="
+
+[multilib]
+Include = /etc/pacman.d/mirrorlist
+
+[archlinuxfr]
+SigLevel = Never
+Server = http://repo.archlinux.fr/\$arch
+"
+HOSTFILE="
+#
+# /etc/hosts: static lookup table for host names
+#
+
+#<ip-address>   <hostname.domain.org>   <hostname>
+127.0.0.1       localhost.localdomain   ${HOSTNAME}
+::1             localhost.localdomain   ${HOSTNAME}
+
+# End of file
+"
