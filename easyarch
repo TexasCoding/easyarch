@@ -90,7 +90,11 @@ front_install(){
     install_lightdm
     install_audio_drivers
     install_themes_fonts_icons
-    install_common_apps
+    echo "${BCyan}Do you want to install common applications now? Enter 'y' for yes.${Reset}"
+    read COMMON_APPS
+    if [[ $COMMON_APPS == y ]]; then
+        install_common_apps
+    fi
     install_virtualbox
     install_myawesome
     setup_touchpad
@@ -103,7 +107,7 @@ front_install(){
 }
 #}}}
 
-cho "${BCyan}Do you want to install base setup? Enter 'y' for yes.${Reset}"
+echo "${BCyan}Do you want to install base setup? Enter 'y' for yes.${Reset}"
 read BASE_INSTALL
 if [[ $BASE_INSTALL == y ]]; then
     front_install

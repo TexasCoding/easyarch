@@ -41,7 +41,7 @@ arch_chroot() {
 
 #ARCH-CHRROT{{{
 user_chroot() { 
-	arch_chroot "su - ${USER_NAME} -c 'cd /home/${USER_NAME} && $1'"
+	arch_chroot "su - ${USER_NAME} -c 'cd /home/${USER_NAME} && ${1}'"
 }
 #}}}
 
