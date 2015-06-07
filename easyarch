@@ -1,4 +1,5 @@
 #! /bin/bash
+pacman -Sy dmidecode
 
 # COLORS {{{
     Bold=$(tput bold)
