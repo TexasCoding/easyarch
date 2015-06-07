@@ -364,8 +364,6 @@ setup_partitions(){
 
 #VIDEO DRIVER INSTALL{{{
 video_driver_install(){
-	pacman_install "dmidecode "
-
 	local _vga=`lspci | grep VGA | tr "[:upper:]" "[:lower:]"`
 	local _vga_length=`lspci | grep VGA | wc -l`
 	if [[ -n $(dmidecode --type 1 | grep VirtualBox) ]]; then
@@ -405,7 +403,8 @@ dot_files_config(){
 	blue_prompt "Setting up custom .bashrc"
 	user_chroot "rm .bashrc"
 	user_chroot "git clone git://github.com/jeff10278/dotfiles.git"
-	user_chroot "cp -r ~/dotfiles ~/"
+	user_chroot "cp  ~/dotfiles/.* ~/"
+	user_chroot "cp  ~/dotfiles/fonts.conf ~/"
 	
 	user_chroot "rm -r ~/dotfiles"
 	yellow_prompt "dotfiles have been setup"
@@ -511,11 +510,8 @@ install_myawesome(){
 	blue_prompt "Will be asked for github credintials"
 	pacman_install "awesome"
 	yaourt_install "lain-git"
-
 	user_chroot "git clone git://github.com/jeff10278/myawesome.git"
-
 	user_chroot "cp -r ~/myawesome ~/.config/awesome"
-
 	pacman_install "archlinux-xdg-menu"
 	user_chroot "xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu > ~/.config/awesome/archmenu.lua"
 	yellow_prompt "Custom Awesome WM has been installed"
@@ -561,7 +557,7 @@ setup_touchpad(){
 
 #INSTALL BASICS{{{
 install_basics(){
-	pacman_install "bash-completion vim hddtemp lm_sensors smartmontools terminus-font btrfs-progs dosfstools exfat-utils f2fs-tools gpart jfsutils mtools nilfs-utils ntfs-3g reiserfsprogs xfsprogs"
+	pacman_install "dmidecode bash-completion vim hddtemp lm_sensors smartmontools terminus-font btrfs-progs dosfstools exfat-utils f2fs-tools gpart jfsutils mtools nilfs-utils ntfs-3g reiserfsprogs xfsprogs"
 }
 #}}}
 

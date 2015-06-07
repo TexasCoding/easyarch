@@ -1,0 +1,10 @@
+#! /bin/bash
+
+if [[ -f `pwd`/functions ]]; then
+  source functions
+else
+  echo "missing file: functions"
+  exit 1
+fi
+
+video_driver_install
