@@ -405,12 +405,9 @@ dot_files_config(){
 	blue_prompt "Setting up custom .bashrc"
 	user_chroot "rm .bashrc"
 	user_chroot "git clone git://github.com/jeff10278/dotfiles.git"
-	user_chroot "ln -s ~/dotfiles/.bashrc ~/.bashrc"
-	user_chroot "ln -s ~/dotfiles/.yaourtrc ~/.yaourtrc"
-	user_chroot "ln -s ~/dotfiles/.nanorc ~/.nanorc"
-	user_chroot "ln -s ~/dotfiles/.dircolors ~/.dircolors"
-	user_chroot "ln -s ~/dotfiles/.dircolors_256 ~/.dircolors_256"
-	user_chroot "ln -s ~/dotfiles/fonts.conf ~/fonts.conf"
+	user_chroot "cp -r ~/dotfiles/** ~/"
+	user_chroot "rm -r ~/.git"
+	user_chroot "rm -r ~/dotfiles"
 	yellow_prompt "dotfiles have been setup"
 }
 #}}}
@@ -516,7 +513,8 @@ install_myawesome(){
 	yaourt_install "lain-git"
 
 	user_chroot "git clone git://github.com/jeff10278/myawesome.git"
-	user_chroot "ln -s ~/myawesome ~/.config/awesome"
+	user_chroot "mkdir -p ~/.config/awesome"
+	user_chroot "cp -r ~/myawesome/** ~/.config/awesome/"
 
 	pacman_install "archlinux-xdg-menu"
 	user_chroot "xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu > ~/.config/awesome/archmenu.lua"

@@ -1,4 +1,11 @@
 INTERNET_APPS=(
-		'firefox'
-		'google-chrome' 
+	['offical']=(
+			'firefox'
+			
+		)
+
+	['aur']=(
+			'google-chrome' 
+		)	
+		
 	)
