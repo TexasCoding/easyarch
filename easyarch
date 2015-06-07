@@ -110,9 +110,8 @@ front_install(){
 echo "${BCyan}Do you want to install base setup? Enter 'y' for yes.${Reset}"
 read BASE_INSTALL
 if [[ $BASE_INSTALL == y ]]; then
-    front_install
+    base_install
 fi
-base_install
 
 echo "${BCyan}Do you want to install frontend now? Enter 'y' for yes.${Reset}"
 read FRONT_INSTALL
