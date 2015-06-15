@@ -10,24 +10,32 @@ fi
 #PROMPTS{{{
 	#BLUE {{{
 	blue_prompt(){
-	echo "${BCyan}${1}.${Reset}"
-	echo ""
-	sleep 1
+		echo "${BCyan}${1}.${Reset}"
+		echo ""
+		sleep 1
 	}	
 	#}}}
 
 	#YELLOW {{{
 	yellow_prompt(){
-	echo "${BYellow}${1}.${Reset}"
-	echo ""
-	sleep 1
+		echo "${BYellow}${1}.${Reset}"
+		echo ""
+		sleep 1
 	}	
+	#}}}
+
+	#ACTION{{{
+	action-prompt(){
+		echo "${BBlue}[${Reset}${Bold}X${BBlue}]${Reset} ${BBlue}${1} ${2} ${3}${Reset} "
+		echo ""
+		sleep 1
+	}
 	#}}}
 
 	#SPACE {{{
 	space(){
-	echo ""
-	sleep 1
+		echo ""
+		sleep 1
 	}	
 	#}}}
 #}}}
@@ -59,18 +67,21 @@ yaourt_install(){
 
 #SYSTEMCTL ENABLE{{{
 systemctl_enable(){
+	action_prompt "systemctl" "enable" "${1}"
 	arch_chroot "systemctl enable ${1}.service"
 }
 #}}}
 
 #SYSTEMCTL MASK{{{
 systemctl_mask(){
+	action_prompt "systemctl" "mask" "${1}"
 	arch_chroot "systemctl mask ${1}.service"
 }
 #}}}
 
 #SYSTEMCTL DISABLE{{{
 systemctl_disable(){
+	action_prompt "systemctl" "disable" "${1}"
 	arch_chroot "systemctl disable ${1}.service"
 }
 #}}}
@@ -107,38 +118,6 @@ read_input_text() {
 	OPTION=`echo "$OPTION" | tr '[:upper:]' '[:lower:]'`
 
 } 
-#}}}
-
-# SETUP MIRRORLIST{{{
-mirrorlist(){
-	local countries_name=("Australia" "Austria" "Belarus" "Belgium" "Brazil" "Bulgaria" "Canada" "Chile" "China" "Colombia" "Czech Republic" "Denmark" "Estonia" "Finland" "France" "Germany" "Greece" "Hungary" "India" "Ireland" "Israel" "Italy" "Japan" "Kazakhstan" "Korea" "Latvia" "Luxembourg" "Macedonia" "Netherlands" "New Caledonia" "New Zealand" "Norway" "Poland" "Portugal" "Romania" "Russian" "Serbia" "Singapore" "Slovakia" "South Africa" "Spain" "Sri Lanka" "Sweden" "Switzerland" "Taiwan" "Turkey" "Ukraine" "United Kingdom" "United States" "Uzbekistan" "Viet Nam")
-	country_list(){
-		blue_prompt "Select your mirrorlist country"
-		select country_name in "${countries_name[@]}"; do
-			if contains_element "$country_name" "${countries_name[@]}"; then
-				MIRRORLIST_COUNTRY=$country_name
-				break
-			else
-				invalid_option
-			fi
-		done
-	}
-
-	OPTION=n
-	while [[ $OPTION != y ]]; do
-		country_list
-		read_input_text "Confirm mirrorlist country: ${MIRRORLIST_COUNTRY}"
-	done
-}
-#}}}
-
-#INSTALL MIRRORLIST LIVE{{{
-install_mirrorlist_live(){
-	blue_prompt "Setting up mirrorlist on live cd"
-	pacman -S reflector --noconfirm
-	reflector --verbose --country "${MIRRORLIST_COUNTRY}" -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist
-	yellow_prompt "Mirrorlist is set on live cd"
-}
 #}}}
 
 #INSTALL MIRRORLIST SYSTEM{{{
@@ -420,12 +399,11 @@ mount_shared(){
 
 	arch_chroot "gpasswd -a ${USER_NAME} disk"
 	echo "UUID=${UUID} /run/media/${USER_NAME}/Shared ntfs-3g uid=${USER_NAME},gid=users,dmask=022,fmask=133 0 0" >> /mnt/etc/fstab
-	
-	user_chroot "ntfs-3g UUID=${UUID} /run/media/${USER_NAME}/Shared"
 
 	blue_prompt "Create link to Shared Dropbox folder."
 	user_chroot "ln -s /run/media/${USER_NAME}/Shared/Dropbox ~/Dropbox"
 	blue_prompt "Create link to Shared Downloads folder."
+	user_chroot "rm -r ~/Downloads"
 	user_chroot "ln -s /run/media/${USER_NAME}/Shared/Downloads ~/Downloads"
 	yellow_prompt "Shared folder has been setup"
 }
@@ -507,11 +485,13 @@ install_themes_fonts_icons(){
 #INSTALL MYAWESOME{{{
 install_myawesome(){
 	blue_prompt "Installing My Custom Awesome WM."
-	blue_prompt "Will be asked for github credintials"
 	pacman_install "awesome"
 	yaourt_install "lain-git compton"
 	user_chroot "git clone git://github.com/jeff10278/myawesome.git"
+	user_chroot "mkdir -p .config"
 	user_chroot "cp -r myawesome .config/awesome"
+	blue_prompt "Creating compton config."
+	user_chroot "echo \"${COMPTON_SETTINGS}\" > .config/compton.conf"
 	pacman_install "archlinux-xdg-menu"
 	user_chroot "xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu > ~/.config/awesome/archmenu.lua"
 	yellow_prompt "Custom Awesome WM has been installed"
@@ -588,4 +568,63 @@ mkinitcpio_run(){
 	yellow_prompt "MKINITCPIO completed"
 }
 #}}}
+
+#GET KEYMAP{{{
+getkeymap() { 
+	local _keymaps=(`localectl list-keymaps`)
+	PS3="(shift+pgup/pgdown) $prompt1"
+	echo "Select keymap:"
+
+	select KEYMAP in "${_keymaps[@]}"; do
+		if contains_element "$KEYMAP" "${_keymaps[@]}"; then
+			break
+		else
+			invalid_option
+		fi
+	done
+  }
+  #}}}
+
+  #SET LOCALE{{{
+  setlocale() { 
+	local _locale_list=(`cat /etc/locale.gen | grep UTF-8 | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g'`);
+	PS3="$prompt1"
+	echo "Select locale:"
+
+	select LOCALE in "${_locale_list[@]}"; do
+		if contains_element "$LOCALE" "${_locale_list[@]}"; then
+			LOCALE_UTF8="${LOCALE}.UTF-8"
+			break
+		else
+			invalid_option
+		fi
+	done
+  }
+  #}}}
+
+  #SET TIMEZONE{{{
+  settimezone() { 
+	local _zones=(`timedatectl list-timezones | sed 's/\/.*$//' | uniq`)
+	PS3="$prompt1"
+	echo "Select zone:"
+
+	select ZONE in "${_zones[@]}"; do
+		if contains_element "$ZONE" "${_zones[@]}"; then
+			local _subzones=(`timedatectl list-timezones | grep ${ZONE} | sed 's/^.*\///'`)
+			PS3="$prompt1"
+			echo "Select subzone:"
+
+			select SUBZONE in "${_subzones[@]}"; do
+				if contains_element "$SUBZONE" "${_subzones[@]}"; then
+					break
+				else
+					invalid_option
+				fi
+			done
+			break
+		else
+		invalid_option
+		fi
+	done
+  } #}}}
 	
