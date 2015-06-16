@@ -51,7 +51,32 @@ vboxguest
 vboxsf
 vboxvideo
 "
+
 MIRRORLIST_REPOS="
+#
+# /etc/pacman.conf
+#
+
+[options]
+HoldPkg = pacman glibc
+
+Architecture = auto
+
+Color
+
+CheckSpace
+
+SigLevel = Required DatabaseOptional
+LocalFileSigLevel = Optional
+
+[core]
+Include = /etc/pacman.d/mirrorlist
+
+[extra]
+Include = /etc/pacman.d/mirrorlist
+
+[community]
+Include = /etc/pacman.d/mirrorlist
 
 [multilib]
 Include = /etc/pacman.d/mirrorlist
@@ -60,14 +85,15 @@ Include = /etc/pacman.d/mirrorlist
 SigLevel = Never
 Server = http://repo.archlinux.fr/\$arch
 "
+
 HOSTFILE="
 #
 # /etc/hosts: static lookup table for host names
 #
 
 #<ip-address>   <hostname.domain.org>   <hostname>
-127.0.0.1       localhost.localdomain   ${HOSTNAME}
-::1             localhost.localdomain   ${HOSTNAME}
+127.0.0.1                localhost.localdomain        ${HOSTNAME}
+::1                               localhost.localdomain        ${HOSTNAME}
 
 # End of file
 "

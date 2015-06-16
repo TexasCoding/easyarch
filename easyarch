@@ -1,41 +1,6 @@
 #! /bin/bash
 pacman -Sy dmidecode
 
-# SETUP MIRRORLIST{{{
-mirrorlist(){
-    local countries_name=("Australia" "Austria" "Belarus" "Belgium" "Brazil" "Bulgaria" "Canada" "Chile" "China" "Colombia" "Czech Republic" "Denmark" "Estonia" "Finland" "France" "Germany" "Greece" "Hungary" "India" "Ireland" "Israel" "Italy" "Japan" "Kazakhstan" "Korea" "Latvia" "Luxembourg" "Macedonia" "Netherlands" "New Caledonia" "New Zealand" "Norway" "Poland" "Portugal" "Romania" "Russian" "Serbia" "Singapore" "Slovakia" "South Africa" "Spain" "Sri Lanka" "Sweden" "Switzerland" "Taiwan" "Turkey" "Ukraine" "United Kingdom" "United States" "Uzbekistan" "Viet Nam")
-    country_list(){
-        blue_prompt "Select your mirrorlist country"
-        select country_name in "${countries_name[@]}"; do
-            if contains_element "$country_name" "${countries_name[@]}"; then
-                MIRRORLIST_COUNTRY=$country_name
-                break
-            else
-                invalid_option
-            fi
-        done
-    }
-
-    OPTION=n
-    while [[ $OPTION != y ]]; do
-        country_list
-        read_input_text "Confirm mirrorlist country: ${MIRRORLIST_COUNTRY}"
-    done
-}
-#}}}
-
-#INSTALL MIRRORLIST LIVE{{{
-install_mirrorlist_live(){
-    blue_prompt "Setting up mirrorlist on live cd"
-    pacman -S reflector --noconfirm
-    reflector --verbose --country "${MIRRORLIST_COUNTRY}" -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist
-    yellow_prompt "Mirrorlist is set on live cd"
-}
-#}}}
-
-mirrorlist
-install_mirrorlist_live
-
 # COLORS {{{
     Bold=$(tput bold)
     Underline=$(tput sgr 0 1)

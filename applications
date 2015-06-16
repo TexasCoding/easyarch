@@ -1,11 +1,12 @@
-INTERNET_APPS=(
-	['offical']=(
-			'firefox'
-			
-		)
+COMMON_APPS=(
+	"firefox"
+	"leafpad"
+	"thunderbird"
+	"terminator"
+)
 
-	['aur']=(
-			'google-chrome' 
-		)	
-		
-	)
+AUR_APPS=(
+	"google-chrome"
+	"dropbox"
+	"sublime-text-dev"
+)
