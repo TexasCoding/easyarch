@@ -443,18 +443,18 @@ mount_shared(){
 install_rbenv_ruby(){
 	blue_prompt "Installing RBENV"
 	user_chroot "git clone git://github.com/sstephenson/rbenv.git .rbenv"
-	user_chroot "`echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> /mnt/home/${USER_NAME}/.bashrc`"
-	user_chroot "`echo 'eval "$(rbenv init -)"' >> /mnt/home/${USER_NAME}/.bashrc`"
+	user_chroot `echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> /mnt/home/${USER_NAME}/.bashrc`
+	user_chroot `echo 'eval "$(rbenv init -)"' >> /mnt/home/${USER_NAME}/.bashrc`
 	user_chroot "exec $SHELL"
 	user_chroot "git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build"
-	user_chroot "`echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> /mnt/home/${USER_NAME}/.bashrc`"
+	user_chroot `echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> /mnt/home/${USER_NAME}/.bashrc`
 	user_chroot "exec $SHELL"
 	user_chroot "git clone https://github.com/sstephenson/rbenv-gem-rehash.git ~/.rbenv/plugins/rbenv-gem-rehash"
 	
 	user_chroot "source ~/.bashrc && rbenv install 2.2.2"
 	user_chroot "source ~/.bashrc && rbenv global 2.2.2"
 
-	user_chroot "`echo "gem: --no-ri --no-rdoc" > /mnt/home/${USER_NAME}/.gemrc`"
+	user_chroot `echo "gem: --no-ri --no-rdoc" > /mnt/home/${USER_NAME}/.gemrc`
 	user_chroot "source ~/.bashrc && gem install bundler"
 
 	blue_prompt "Rbenv and Ruby Version:"
@@ -530,7 +530,7 @@ install_themes_fonts_icons(){
 	pacman_install "ttf-dejavu ttf-liberation ttf-freefont ttf-bitstream-vera adobe-source-sans-pro-fonts adobe-source-code-pro-fonts adobe-source-serif-pro-fonts gtk-theme-orion gnome-icon-theme lxappearance"
 	yaourt_install "awoken-icons"
 	user_chroot "touch ~/.gtkrc-2.0"
-	user_chroot "`echo "${GTK_SETTINGS}" > /mnt/home/${USER_NAME}/.gtkrc-2.0`"
+	user_chroot `echo "${GTK_SETTINGS}" > /mnt/home/${USER_NAME}/.gtkrc-2.0`
 	yellow_prompt "Themes fonts and icon have been installed"
 }
 #}}}
@@ -544,7 +544,7 @@ install_myawesome(){
 	user_chroot "mkdir -p .config"
 	user_chroot "cp -r myawesome .config/awesome"
 	blue_prompt "Creating compton config."
-	user_chroot "`echo "${COMPTON_SETTINGS}" > .config/compton.conf`"
+	user_chroot `echo "${COMPTON_SETTINGS}" > .config/compton.conf`
 	pacman_install "archlinux-xdg-menu"
 	user_chroot "xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu > ~/.config/awesome/archmenu.lua"
 	yellow_prompt "Custom Awesome WM has been installed"
