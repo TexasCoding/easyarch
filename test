@@ -1,11 +1,13 @@
-if [[ -f `pwd`/applications ]]; then
-  source applications
+if [[ -f `pwd`/functions ]]; then
+  source functions
 else
-  echo "missing file: applications"
+  echo "missing file: functions"
   exit 1
 fi
 
-for PKG in ${COMMON_APPS[@]}; do
-	echo "${PKG}"
-	echo ""
-done
+# for PKG in ${COMMON_APPS[@]}; do
+# 	echo "${PKG}"
+# 	echo ""
+# done
+
+settimezone

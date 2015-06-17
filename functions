@@ -122,7 +122,7 @@ read_input_text() {
 mirrorlist(){
     local countries_name=("Australia" "Austria" "Belarus" "Belgium" "Brazil" "Bulgaria" "Canada" "Chile" "China" "Colombia" "Czech Republic" "Denmark" "Estonia" "Finland" "France" "Germany" "Greece" "Hungary" "India" "Ireland" "Israel" "Italy" "Japan" "Kazakhstan" "Korea" "Latvia" "Luxembourg" "Macedonia" "Netherlands" "New Caledonia" "New Zealand" "Norway" "Poland" "Portugal" "Romania" "Russian" "Serbia" "Singapore" "Slovakia" "South Africa" "Spain" "Sri Lanka" "Sweden" "Switzerland" "Taiwan" "Turkey" "Ukraine" "United Kingdom" "United States" "Uzbekistan" "Viet Nam")
     country_list(){
-        blue_prompt "Select your mirrorlist country"
+        blue_prompt "Select your country"
         select country_name in "${countries_name[@]}"; do
             if contains_element "$country_name" "${countries_name[@]}"; then
                 MIRRORLIST_COUNTRY=$country_name
@@ -180,7 +180,7 @@ generate_fstab(){
 #WIRELESS SOFTWARE{{{
 wireless_software(){
 	blue_prompt "Installing wireless software"
-	pacman_install "iw wireless_tools wpa_actiond wpa_supplicant dialog reflector"
+	pacman_install "iw wireless_tools wpa_actiond wpa_supplicant dialog"
 	yellow_prompt "Wireless software installed"
 }
 #}}}
@@ -188,7 +188,7 @@ wireless_software(){
 #SET LOCALE{{{
 set_locale(){
 	blue_prompt "Setting system locale"
-	echo "en_US.UTF-8 UTF-8" > /mnt/etc/locale.gen
+	echo "${LOCALE_UTF8} UTF-8" > /mnt/etc/locale.gen
 	arch_chroot "locale-gen"
 	yellow_prompt "Locale has been is set"
 }
@@ -197,8 +197,8 @@ set_locale(){
 #SET LANG{{{
 set_lang(){
 	blue_prompt "Setting system LANG"
-	echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
-	arch_chroot "export LANG=en_US.UTF-8"
+	echo "LANG=${LOCALE_UTF8}" > /mnt/etc/locale.conf
+	arch_chroot "export LANG=${LOCALE_UTF8}"
 	yellow_prompt "LANG has been set"
 }
 #}}}
@@ -206,7 +206,7 @@ set_lang(){
 #SET LOCALTIME{{{
 set_localtime(){
 	blue_prompt "Setting the system local timezone"
-	arch_chroot "ln -s /usr/share/zoneinfo/America/Chicago /etc/localtime"
+	arch_chroot "ln -s /usr/share/zoneinfo/${ZONE}/${SUBZONE} /etc/localtime"
 	yellow_prompt "Timezone has been set"
 }
 #}}}
@@ -415,7 +415,7 @@ dot_files_config(){
 	user_chroot "cp  ~/dotfiles/.* ~/"
 	user_chroot "cp  ~/dotfiles/fonts.conf ~/"
 	
-	user_chroot "rm -rf ~/dotfiles"
+	arch_chroot "rm -r ~/dotfiles"
 	yellow_prompt "dotfiles have been setup"
 }
 #}}}
@@ -530,7 +530,7 @@ install_themes_fonts_icons(){
 	pacman_install "ttf-dejavu ttf-liberation ttf-freefont ttf-bitstream-vera adobe-source-sans-pro-fonts adobe-source-code-pro-fonts adobe-source-serif-pro-fonts gtk-theme-orion gnome-icon-theme lxappearance"
 	yaourt_install "awoken-icons"
 	user_chroot "touch ~/.gtkrc-2.0"
-	echo "${GTK_SETTINGS}" > /mnt/home/${USER_NAME}/.gtkrc-2.0	
+	user_chroot "`echo "${GTK_SETTINGS}" > /mnt/home/${USER_NAME}/.gtkrc-2.0`"
 	yellow_prompt "Themes fonts and icon have been installed"
 }
 #}}}
@@ -641,43 +641,59 @@ getkeymap() {
   #SET LOCALE{{{
   setlocale() { 
 	local _locale_list=(`cat /etc/locale.gen | grep UTF-8 | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g'`);
-	PS3="$prompt1"
-	echo "Select locale:"
+	locale_list(){
+		blue_prompt "Select your locale"
+		select LOCALE in "${_locale_list[@]}"; do
+			if contains_element "$LOCALE" "${_locale_list[@]}"; then
+				LOCALE_UTF8="${LOCALE}.UTF-8"
+				break
+			else
+				invalid_option
+			fi
+		done
+	}
+	
 
-	select LOCALE in "${_locale_list[@]}"; do
-		if contains_element "$LOCALE" "${_locale_list[@]}"; then
-			LOCALE_UTF8="${LOCALE}.UTF-8"
-			break
-		else
-			invalid_option
-		fi
+	OPTION=n
+	while [[ $OPTION != y ]]; do
+	    locale_list
+	    read_input_text "Confirm locale: ${LOCALE_UTF8}"
 	done
   }
   #}}}
 
   #SET TIMEZONE{{{
   settimezone() { 
-	local _zones=(`timedatectl list-timezones | sed 's/\/.*$//' | uniq`)
-	PS3="$prompt1"
-	echo "Select zone:"
 
-	select ZONE in "${_zones[@]}"; do
-		if contains_element "$ZONE" "${_zones[@]}"; then
-			local _subzones=(`timedatectl list-timezones | grep ${ZONE} | sed 's/^.*\///'`)
-			PS3="$prompt1"
-			echo "Select subzone:"
+	timezone_lists(){
+		local _zones=(`timedatectl list-timezones | sed 's/\/.*$//' | uniq`)
+		blue_prompt "Set your timezone ex:(America/Chicago)"
+		blue_prompt "Select zone:"
 
-			select SUBZONE in "${_subzones[@]}"; do
-				if contains_element "$SUBZONE" "${_subzones[@]}"; then
-					break
-				else
-					invalid_option
-				fi
-			done
-			break
-		else
-		invalid_option
-		fi
+		select ZONE in "${_zones[@]}"; do
+			if contains_element "$ZONE" "${_zones[@]}"; then
+				local _subzones=(`timedatectl list-timezones | grep ${ZONE} | sed 's/^.*\///'`)
+				blue_prompt "Select subzone:"
+
+				select SUBZONE in "${_subzones[@]}"; do
+					if contains_element "$SUBZONE" "${_subzones[@]}"; then
+						break
+					else
+						invalid_option
+					fi
+				done
+				break
+			else
+			invalid_option
+			fi
+		done
+	}
+
+	OPTION=n
+	while [[ $OPTION != y ]]; do
+	    timezone_lists
+	    read_input_text "Confirm timezone: ${ZONE}/${SUBZONE}"
 	done
+	
   } #}}}
 	

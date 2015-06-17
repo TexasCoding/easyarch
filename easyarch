@@ -54,6 +54,8 @@ fi
 #BASE INSTALL{{{
 base_install(){
     mirrorlist
+    setlocale
+    settimezone
     install_mirrorlist_live
     setup_partitions
     install_base
@@ -117,7 +119,6 @@ fi
 
 mkinitcpio_run
 
-blue_prompt "Basic install is complete"
-yellow_prompt "You must run ./finalize to complete installation"
+yellow_prompt "Basic install is complete"
 read -p "${BPurple}Press [Enter] to exit and reboot${Reset}"
-exit
+reboot
