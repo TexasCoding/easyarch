@@ -144,7 +144,7 @@ mirrorlist(){
 #INSTALL MIRRORLIST LIVE{{{
 install_mirrorlist_live(){
     blue_prompt "Setting up mirrorlist on live cd"
-    pacman -S reflector --noconfirm
+    pacman -S reflector rsync --noconfirm --needed
     reflector --verbose --country "${MIRRORLIST_COUNTRY}" -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist
     yellow_prompt "Mirrorlist is set on live cd"
 }
@@ -153,7 +153,7 @@ install_mirrorlist_live(){
 #INSTALL MIRRORLIST SYSTEM{{{
 install_mirrorlist_system(){
 	blue_prompt "Setting up mirrorlist"
-	pacman_install "reflector"
+	pacman_install "reflector rsync"
 	arch_chroot "reflector --verbose --country '${MIRRORLIST_COUNTRY}' -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist"
 	yellow_prompt "Mirrorlist is set"
 }
@@ -415,7 +415,7 @@ dot_files_config(){
 	user_chroot "cp  ~/dotfiles/.* ~/"
 	user_chroot "cp  ~/dotfiles/fonts.conf ~/"
 	
-	arch_chroot "rm -r ~/dotfiles"
+	arch_chroot "rm -rf ~/dotfiles"
 	yellow_prompt "dotfiles have been setup"
 }
 #}}}
@@ -443,18 +443,18 @@ mount_shared(){
 install_rbenv_ruby(){
 	blue_prompt "Installing RBENV"
 	user_chroot "git clone git://github.com/sstephenson/rbenv.git .rbenv"
-	user_chroot `echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> /mnt/home/${USER_NAME}/.bashrc`
-	user_chroot `echo 'eval "$(rbenv init -)"' >> /mnt/home/${USER_NAME}/.bashrc`
+	user_chroot "`echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> /mnt/home/${USER_NAME}/.bashrc`"
+	user_chroot "`echo 'eval "$(rbenv init -)"' >> /mnt/home/${USER_NAME}/.bashrc`"
 	user_chroot "exec $SHELL"
 	user_chroot "git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build"
-	user_chroot `echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> /mnt/home/${USER_NAME}/.bashrc`
+	user_chroot "`echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> /mnt/home/${USER_NAME}/.bashrc`"
 	user_chroot "exec $SHELL"
 	user_chroot "git clone https://github.com/sstephenson/rbenv-gem-rehash.git ~/.rbenv/plugins/rbenv-gem-rehash"
 	
 	user_chroot "source ~/.bashrc && rbenv install 2.2.2"
 	user_chroot "source ~/.bashrc && rbenv global 2.2.2"
 
-	user_chroot `echo "gem: --no-ri --no-rdoc" > /mnt/home/${USER_NAME}/.gemrc`
+	user_chroot "`echo "gem: --no-ri --no-rdoc" > /mnt/home/${USER_NAME}/.gemrc`"
 	user_chroot "source ~/.bashrc && gem install bundler"
 
 	blue_prompt "Rbenv and Ruby Version:"
@@ -477,6 +477,7 @@ install_rbenv_ruby(){
 #INSTALL VIRTUALBOX{{{
 install_virtualbox(){
 	pacman_install "virtualbox"
+	touch /mnt/etc/modules-load.d/virtualbox.conf
 	echo "${VBOX_HOSTS}" >> /mnt/etc/modules-load.d/virtualbox.conf
 	arch_chroot "gpasswd -a ${USER_NAME} vboxusers"
 }
@@ -544,7 +545,8 @@ install_myawesome(){
 	user_chroot "mkdir -p .config"
 	user_chroot "cp -r myawesome .config/awesome"
 	blue_prompt "Creating compton config."
-	user_chroot `echo "${COMPTON_SETTINGS}" > .config/compton.conf`
+	user_chroot "touch .config/compton.conf"
+	user_chroot "`echo "${COMPTON_SETTINGS}" > .config/compton.conf`"
 	pacman_install "archlinux-xdg-menu"
 	user_chroot "xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu > ~/.config/awesome/archmenu.lua"
 	yellow_prompt "Custom Awesome WM has been installed"
@@ -582,7 +584,8 @@ default_directories(){
 #SETUP TOUCHPAD{{{
 setup_touchpad(){
 	blue_prompt "Setting up touchpad synaptics"
-	arch_chroot "touch /etc/X11/xorg.conf.d/50-synaptics.conf"
+	mkdir -p /mnt/etc/X11/xorg.conf.d
+	touch /mnt/etc/X11/xorg.conf.d/50-synaptics.conf
 	echo "${SYNAPTIC_SETTINGS} " > /mnt/etc/X11/xorg.conf.d/50-synaptics.conf
 	yellow_prompt "Touchpad has been set"
 }
