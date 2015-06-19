@@ -546,9 +546,10 @@ install_myawesome(){
 	user_chroot "cp -r myawesome .config/awesome"
 	blue_prompt "Creating compton config."
 	user_chroot "touch .config/compton.conf"
-	user_chroot "`echo "${COMPTON_SETTINGS}" > .config/compton.conf`"
+	user_chroot "`echo "${COMPTON_SETTINGS}" >> .config/compton.conf`"
 	pacman_install "archlinux-xdg-menu"
 	user_chroot "xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu > ~/.config/awesome/archmenu.lua"
+	user_chroot "rm -rf myawesome"
 	yellow_prompt "Custom Awesome WM has been installed"
 }
 #}}}
