@@ -1,5 +1,5 @@
 #! /bin/bash
-pacman -Sy dmidecode
+pacman -Sy dmidecode git --noconfirm --needed
 
 # COLORS {{{
     Bold=$(tput bold)
@@ -99,10 +99,41 @@ front_install(){
 }
 #}}}
 
+#FRONT INSTALL{{{
+test_install(){
+    git_install
+    dot_files_config
+    install_basics
+    aur_support
+    #install_xorg
+    #install_networkmanager
+    #video_driver_install
+    #install_lightdm
+    #install_audio_drivers
+    #install_themes_fonts_icons
+    #install_common_apps
+    #install_virtualbox
+    install_myawesome
+    setup_touchpad
+    default_directories
+    #install_flash
+    #install_tlp
+    #install_preload
+    nvm_install
+    install_rbenv_ruby
+}
+#}}}
+
 echo "${BCyan}Do you want to install base setup? Enter 'y' for yes.${Reset}"
 read BASE_INSTALL
 if [[ $BASE_INSTALL == y ]]; then
     base_install
+fi
+
+echo "${BCyan}Do you want to install TEST TEST now? Enter 'y' for yes.${Reset}"
+read TEST_INSTALL
+if [[ $TEST_INSTALL == y ]]; then
+    test_install
 fi
 
 echo "${BCyan}Do you want to install frontend now? Enter 'y' for yes.${Reset}"
