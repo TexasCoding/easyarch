@@ -420,6 +420,12 @@ dot_files_config(){
 }
 #}}}
 
+#GNOME INSTALL{{{
+gnome_install(){
+	pacman_install "gnome"
+}
+#}}}
+
 #MOUNT SHARED{{{
 mount_shared(){
 	blue_prompt "Listing drives with UUID."

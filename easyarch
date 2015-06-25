@@ -76,6 +76,10 @@ base_install(){
 
 #FRONT INSTALL{{{
 front_install(){
+    echo "${BCyan}Select prefered desktop enviroment.${Reset}"
+    echo "${BCyan}(1) Awesome${Reset}"
+    echo "${BCyan}(2) Gnome${Reset}"
+    read DESKTOP_ENV
     git_install
     dot_files_config
     install_basics
@@ -88,7 +92,12 @@ front_install(){
     install_themes_fonts_icons
     install_common_apps
     install_virtualbox
-    install_myawesome
+    if [[ $DESKTOP_ENV == 1 ]]; then
+        install_myawesome
+    fi
+    if [[ $DESKTOP_ENV == 2 ]]; then
+        gnome_install
+    fi
     setup_touchpad
     default_directories
     install_flash
@@ -130,11 +139,11 @@ if [[ $BASE_INSTALL == y ]]; then
     base_install
 fi
 
-echo "${BCyan}Do you want to install TEST TEST now? Enter 'y' for yes.${Reset}"
-read TEST_INSTALL
-if [[ $TEST_INSTALL == y ]]; then
-    test_install
-fi
+# echo "${BCyan}Do you want to install TEST TEST now? Enter 'y' for yes.${Reset}"
+# read TEST_INSTALL
+# if [[ $TEST_INSTALL == y ]]; then
+#     test_install
+# fi
 
 echo "${BCyan}Do you want to install frontend now? Enter 'y' for yes.${Reset}"
 read FRONT_INSTALL
