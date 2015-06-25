@@ -87,19 +87,19 @@ front_install(){
     install_xorg
     install_networkmanager
     video_driver_install
-    install_lightdm
     install_audio_drivers
     install_themes_fonts_icons
     install_common_apps
     install_virtualbox
     if [[ $DESKTOP_ENV == 1 ]]; then
+         install_lightdm
         install_myawesome
+        setup_touchpad
+        default_directories
     fi
     if [[ $DESKTOP_ENV == 2 ]]; then
         gnome_install
     fi
-    setup_touchpad
-    default_directories
     install_flash
     install_tlp
     install_preload
