@@ -85,14 +85,15 @@ front_install(){
     install_basics
     aur_support
     install_xorg
-    install_networkmanager
+    
     video_driver_install
     install_audio_drivers
-    install_themes_fonts_icons
     install_common_apps
     install_virtualbox
     if [[ $DESKTOP_ENV == 1 ]]; then
-         install_lightdm
+        install_lightdm
+        install_networkmanager
+        install_themes_fonts_icons
         install_myawesome
         setup_touchpad
         default_directories

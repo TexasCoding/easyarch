@@ -423,6 +423,8 @@ dot_files_config(){
 #GNOME INSTALL{{{
 gnome_install(){
 	pacman_install "gnome"
+	systemctl_enable "gdm"
+	install_networkmanager
 }
 #}}}
 
