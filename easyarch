@@ -104,8 +104,8 @@ front_install(){
     install_flash
     install_tlp
     install_preload
-    nvm_install
-    install_rbenv_ruby
+    #nvm_install
+    #install_rbenv_ruby
 }
 #}}}
 
