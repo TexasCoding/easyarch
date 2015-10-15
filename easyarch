@@ -103,6 +103,7 @@ front_install(){
     fi
     install_flash
     install_tlp
+    install_cups
     install_preload
     #nvm_install
     #install_rbenv_ruby

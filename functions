@@ -423,7 +423,6 @@ dot_files_config(){
 #GNOME INSTALL{{{
 gnome_install(){
 	pacman_install "gnome"
-	pacman_install "gnome-extra"
 	systemctl_enable "gdm"
 	install_networkmanager
 }
@@ -503,9 +502,18 @@ nvm_install(){
 }
 #}}}
 
+#INSTALL CUPS{{{
+install_cups(){
+	blue_prompt "Installing CUPS"
+	pacman_install "cups ghostscript gsfonts cups-pdf"
+	systemctl_enable "org.cups.cupsd"
+	yellow_prompt "CUPS is installed and enabled"
+}
+#}}}
+
 #INSTALL TLP{{{
 install_tlp(){
-	blue_prompt "Installing TLP"
+	blue_prompt "Installing Tlp"
 	pacman_install "tlp"
 	systemctl_enable "tlp"
 	systemctl_enable "tlp-sleep"
@@ -603,7 +611,7 @@ setup_touchpad(){
 
 #INSTALL BASICS{{{
 install_basics(){
-	pacman_install "dmidecode bash-completion vim hddtemp lm_sensors smartmontools terminus-font btrfs-progs dosfstools exfat-utils f2fs-tools gpart jfsutils mtools nilfs-utils ntfs-3g reiserfsprogs xfsprogs leafpad terminator pcmanfm unzip zip p7zip unrar gvfs udisks imagemagick"
+	pacman_install "dmidecode wget bash-completion vim hddtemp lm_sensors smartmontools terminus-font btrfs-progs dosfstools exfat-utils f2fs-tools gpart jfsutils mtools nilfs-utils ntfs-3g reiserfsprogs xfsprogs leafpad terminator pcmanfm unzip zip p7zip unrar gvfs udisks imagemagick"
 }
 #}}}
 
@@ -611,8 +619,8 @@ install_basics(){
 install_common_apps(){
 	blue_prompt "Installing common applications and tools"
 	pacman_install "firefox bleachbit thunderbird vlc libbluray libdvdcss gimp jre8-openjdk"
-	pacman_install  "pdfsam libreoffice-fresh shotwell evince file-roller gparted uget deluge"
-	yaourt_install "dmenu2 google-chrome sublime-text-dev dropbox"
+	pacman_install  "libreoffice-fresh shotwell evince file-roller gparted uget deluge"
+	yaourt_install "dmenu2 google-chrome sublime-text-dev masterpdfeditor webstorm-eap phpstorm-eap dropbox dpkg"
 	yellow_prompt "Applications and tools have been installed"
 }
 #}}}
