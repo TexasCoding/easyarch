@@ -105,8 +105,8 @@ front_install(){
     install_tlp
     install_cups
     install_preload
-    #nvm_install
-    #install_rbenv_ruby
+    nvm_install
+    install_rbenv_ruby
 }
 #}}}
 
