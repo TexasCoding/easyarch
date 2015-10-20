@@ -44,7 +44,7 @@ read USER_NAME
 echo "${BCyan}Enter your password:${Reset}"
 read PASSWORD
 
-if [[ -f `pwd`/functions ]]; then
+if [[ -f $(pwd)/functions ]]; then
   source functions
 else
   echo "missing file: functions"
