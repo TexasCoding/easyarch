@@ -101,7 +101,7 @@ front_install(){
     if [[ $DESKTOP_ENV == 2 ]]; then
         gnome_install
     fi
-    install_flash
+    #install_flash
     install_tlp
     install_cups
     install_preload
