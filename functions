@@ -261,6 +261,7 @@ aur_support(){
 
 #GIT INSTALL{{{
 git_install(){
+	clear
 	blue_prompt "Installing GIT"
 	pacman_install "git openssh"
 	user_chroot "git config --global color.ui true"
@@ -273,6 +274,7 @@ git_install(){
 
 #INSTALL XORG{{{
 install_xorg(){
+	clear
 	blue_prompt "Install XORG to prepare for desktop"
 	pacman_install "xorg-server xorg-server-utils xorg-xinit xorg-twm xorg-xclock xterm"
 	yellow_prompt "XORG has been installed"
@@ -281,6 +283,7 @@ install_xorg(){
 
 #SELECT DEVICE {{{
 select_device(){
+	clear
 	blue_prompt "Select your device (ex: /dev/sda)"
 	dev_lists(){
 		devices_list=($(lsblk -d | awk '{print "/dev/" $1}' | grep 'sd\|hd\|vd'));
@@ -308,6 +311,7 @@ select_device(){
 
 #SELECT PARTITIONS{{{
 select_partition(){
+	clear
 	blue_prompt "Select your /$1 partition (ex: /dev/sda1)"
 
 	block_list=($(lsblk | grep 'part\|lvm' | awk '{print substr($1,3)}'))
@@ -374,6 +378,7 @@ setup_partitions(){
 
 #VIDEO DRIVER INSTALL{{{
 video_driver_install(){
+	clear
 	local _vga=$(lspci | grep VGA | tr "[:upper:]" "[:lower:]")
 	local _vga_length=$(lspci | grep VGA | wc -l)
 	if [[ -n $(dmidecode --type 1 | grep VirtualBox) ]]; then
@@ -410,6 +415,7 @@ video_driver_install(){
 
 #DOT FILES CONFIG{{{
 dot_files_config(){
+	clear
 	blue_prompt "Setting up custom .bashrc"
 	user_chroot "rm .bashrc"
 	user_chroot "git clone git://github.com/jeff10278/dotfiles.git"
@@ -423,97 +429,17 @@ dot_files_config(){
 
 #GNOME INSTALL{{{
 gnome_install(){
+	clear
+	blue_prompt "Installing Gnome Desktop Enviroment"
 	pacman_install "gnome"
 	systemctl_enable "gdm"
 	install_networkmanager
 }
 #}}}
 
-#MOUNT SHARED{{{
-mount_shared(){
-	blue_prompt "Listing drives with UUID."
-	lsblk -f
-	echo -e "Enter Shared UUID: "
-	read UUID
-
-	arch_chroot "gpasswd -a ${USER_NAME} disk"
-	echo "UUID=${UUID} /run/media/${USER_NAME}/Shared ntfs-3g uid=${USER_NAME},gid=users,dmask=022,fmask=133 0 0" >> /mnt/etc/fstab
-
-	blue_prompt "Create link to Shared Dropbox folder."
-	user_chroot "ln -s /run/media/${USER_NAME}/Shared/Dropbox ~/Dropbox"
-	blue_prompt "Create link to Shared Downloads folder."
-	user_chroot "rm -r ~/Downloads"
-	user_chroot "ln -s /run/media/${USER_NAME}/Shared/Downloads ~/Downloads"
-	yellow_prompt "Shared folder has been setup"
-}
-#}}}
-
-#INSTALL RBENV RUBY{{{
-install_rbenv_ruby(){
-	blue_prompt "Installing RBENV"
-	user_chroot "git clone git://github.com/sstephenson/rbenv.git .rbenv"
-	user_chroot "`echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> /mnt/home/${USER_NAME}/.bashrc`"
-	user_chroot "`echo 'eval "$(rbenv init -)"' >> /mnt/home/${USER_NAME}/.bashrc`"
-	user_chroot "exec $SHELL"
-	user_chroot "git clone git://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build"
-	user_chroot "`echo 'export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"' >> /mnt/home/${USER_NAME}/.bashrc`"
-	user_chroot "exec $SHELL"
-	user_chroot "git clone https://github.com/sstephenson/rbenv-gem-rehash.git ~/.rbenv/plugins/rbenv-gem-rehash"
-	
-	user_chroot "source ~/.bashrc && rbenv install 2.2.2"
-	user_chroot "source ~/.bashrc && rbenv global 2.2.2"
-
-	user_chroot "`echo "gem: --no-ri --no-rdoc" > /mnt/home/${USER_NAME}/.gemrc`"
-	user_chroot "source ~/.bashrc && gem install bundler"
-
-	blue_prompt "Rbenv and Ruby Version:"
-	user_chroot "source ~/.bashrc && ruby -v"
-	blue_prompt "has been installed."
-
-
-	# install rails
-	blue_prompt "Installing Ruby on Rails."
-	user_chroot "source ~/.bashrc && gem install rails -v 4.2.1"
-	user_chroot "source ~/.bashrc && rbenv rehash"
-	blue_prompt "Rails version: "
-	user_chroot "source ~/.bashrc && rails -v"
-	blue_prompt "has been installed."
-
-	yellow_prompt "RBENV has been installed"
-}
-#}}}
-
-#INSTALL VIRTUALBOX{{{
-install_virtualbox(){
-	pacman_install "virtualbox"
-	touch /mnt/etc/modules-load.d/virtualbox.conf
-	echo "${VBOX_HOSTS}" >> /mnt/etc/modules-load.d/virtualbox.conf
-	arch_chroot "gpasswd -a ${USER_NAME} vboxusers"
-}
-#}}}
-
-#NVM INSTALL{{{
-nvm_install(){
-	blue_prompt "Installing NVM"
-	user_chroot "curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.25.4/install.sh | bash"
-	user_chroot "source ~/.bashrc && nvm install stable"
-	user_chroot "source ~/.bashrc && nvm alias default stable"
-	user_chroot "source ~/.bashrc && nvm use default"
-	yellow_prompt "NVM has been installed"
-}
-#}}}
-
-#INSTALL CUPS{{{
-install_cups(){
-	blue_prompt "Installing CUPS"
-	pacman_install "cups ghostscript gsfonts cups-pdf"
-	systemctl_enable "org.cups.cupsd"
-	yellow_prompt "CUPS is installed and enabled"
-}
-#}}}
-
 #INSTALL TLP{{{
 install_tlp(){
+	clear
 	blue_prompt "Installing Tlp"
 	pacman_install "tlp"
 	systemctl_enable "tlp"
@@ -525,6 +451,7 @@ install_tlp(){
 
 #INSTALL PRELOAD{{{
 install_preload(){
+	clear
 	blue_prompt "Installing PreLoad"
 	yaourt_install "preload"
 	systemctl_enable "preload"
@@ -534,6 +461,7 @@ install_preload(){
 
 #INSTALL AUDIO DRIVERS{{{
 install_audio_drivers(){
+	clear
 	blue_prompt "Installing Audio drivers"
 	pacman_install "alsa-utils alsa-plugins"
 	pacman_install "pulseaudio pulseaudio-alsa"
@@ -545,44 +473,16 @@ install_audio_drivers(){
 
 #INSTALL THEMES FONTS ICONS{{{
 install_themes_fonts_icons(){
+	clear
 	blue_prompt "Installing themes fonts and icons"
-	pacman_install "ttf-dejavu ttf-liberation ttf-freefont ttf-bitstream-vera adobe-source-sans-pro-fonts adobe-source-code-pro-fonts adobe-source-serif-pro-fonts gtk-theme-orion gnome-icon-theme lxappearance"
-	yaourt_install "awoken-icons"
-	user_chroot "touch ~/.gtkrc-2.0"
-	user_chroot `echo "${GTK_SETTINGS}" > /mnt/home/${USER_NAME}/.gtkrc-2.0`
+	pacman_install "ttf-dejavu ttf-liberation ttf-freefont ttf-bitstream-vera elementary-icon-theme adobe-source-sans-pro-fonts adobe-source-code-pro-fonts adobe-source-serif-pro-fonts gtk-theme-arc gnome-icon-theme"
 	yellow_prompt "Themes fonts and icon have been installed"
-}
-#}}}
-
-#INSTALL MYAWESOME{{{
-install_myawesome(){
-	blue_prompt "Installing My Custom Awesome WM."
-	pacman_install "awesome"
-	yaourt_install "lain-git compton"
-	user_chroot "git clone git://github.com/jeff10278/myawesome.git"
-	user_chroot "mkdir -p .config"
-	user_chroot "cp -r myawesome .config/awesome"
-	blue_prompt "Creating compton config."
-	user_chroot "touch .config/compton.conf"
-	user_chroot "`echo "${COMPTON_SETTINGS}" >> .config/compton.conf`"
-	pacman_install "archlinux-xdg-menu"
-	user_chroot "xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu > ~/.config/awesome/archmenu.lua"
-	user_chroot "rm -rf myawesome"
-	yellow_prompt "Custom Awesome WM has been installed"
-}
-#}}}
-
-#INSTALL LIGHTDM{{{
-install_lightdm(){
-	blue_prompt "Installing Lightdm"
-	pacman_install "lightdm lightdm-gtk-greeter"
-	systemctl_enable "lightdm"
-	yellow_prompt "Lightdm has been installed"
 }
 #}}}
 
 #INSTALL NETWORKMANAGER{{{
 install_networkmanager(){
+	clear
 	blue_prompt "Installing NetworkManager"
 	pacman_install "networkmanager modemmanager usb_modeswitch network-manager-applet"
 	systemctl_enable "NetworkManager"
@@ -591,27 +491,9 @@ install_networkmanager(){
 }
 #}}}
 
-#DEFAULT DIRECTORIES{{{
-default_directories(){
-	blue_prompt "Creating default user directories"
-	pacman_install "xdg-user-dirs"
-	user_chroot "xdg-user-dirs-update"
-	yellow_prompt "Default directories setup"
-}
-#}}}
-
-#SETUP TOUCHPAD{{{
-setup_touchpad(){
-	blue_prompt "Setting up touchpad synaptics"
-	mkdir -p /mnt/etc/X11/xorg.conf.d
-	touch /mnt/etc/X11/xorg.conf.d/50-synaptics.conf
-	echo "${SYNAPTIC_SETTINGS} " > /mnt/etc/X11/xorg.conf.d/50-synaptics.conf
-	yellow_prompt "Touchpad has been set"
-}
-#}}}
-
 #INSTALL BASICS{{{
 install_basics(){
+	clear
 	blue_prompt "Installing basis applications."
 	pacman_install "dmidecode wget bash-completion vim hddtemp lm_sensors smartmontools terminus-font btrfs-progs dosfstools exfat-utils f2fs-tools gpart jfsutils mtools nilfs-utils ntfs-3g reiserfsprogs xfsprogs terminator unzip zip p7zip unrar gvfs udisks imagemagick gnome-tweak-tool"
 	blue_prompt "Installing fonts."
@@ -622,26 +504,18 @@ install_basics(){
 
 #INSTALL COMMON APPS{{{
 install_common_apps(){
+	clear
 	blue_prompt "Installing common applications and tools"
 	pacman_install "firefox bleachbit thunderbird vlc libbluray libdvdcss gimp jre8-openjdk"
 	pacman_install  "libreoffice-fresh shotwell evince file-roller gparted uget deluge"
-	yaourt_install "dmenu2 google-chrome sublime-text-dev masterpdfeditor webstorm-eap phpstorm-eap dropbox dpkg vertex-themes-git vertex-icons-git moka-icon-theme-git faba-icon-theme-git"
+	yaourt_install "dmenu2 google-chrome sublime-text-dev masterpdfeditor webstorm-eap phpstorm-eap dropbox dpkg"
 	yellow_prompt "Applications and tools have been installed"
-}
-#}}}
-
-#INSTALL FLASH AND HAL{{{
-install_flash(){
-	blue_prompt "Installing Flash and Hal"
-	pacman_install "flashplugin"
-	yaourt_install "hal"
-	systemctl_enable "hal"
-	yellow_prompt "Flash and HAL have been installed"
 }
 #}}}
 
 #MKINITCPIO RUN{{{
 mkinitcpio_run(){
+	clear
 	blue_prompt "Running MKINITCPIO"
 	arch_chroot "mkinitcpio -p linux"
 	yellow_prompt "MKINITCPIO completed"
@@ -650,6 +524,7 @@ mkinitcpio_run(){
 
 #GET KEYMAP{{{
 getkeymap() { 
+	clear
 	local _keymaps=(`localectl list-keymaps`)
 	PS3="(shift+pgup/pgdown) $prompt1"
 	echo "Select keymap:"
@@ -666,6 +541,7 @@ getkeymap() {
 
   #SET LOCALE{{{
   setlocale() { 
+  	clear
 	local _locale_list=(`cat /etc/locale.gen | grep UTF-8 | sed 's/\..*$//' | sed '/@/d' | awk '{print $1}' | uniq | sed 's/#//g'`);
 	locale_list(){
 		blue_prompt "Select your locale"
@@ -692,6 +568,7 @@ getkeymap() {
   settimezone() { 
 
 	timezone_lists(){
+		clear
 		local _zones=(`timedatectl list-timezones | sed 's/\/.*$//' | uniq`)
 		blue_prompt "Set your timezone ex:(America/Chicago)"
 		blue_prompt "Select zone:"
