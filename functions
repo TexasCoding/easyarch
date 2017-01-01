@@ -87,6 +87,7 @@ systemctl_disable(){
 
 #SET ROOT PASSWORD{{{
 set_root_password(){
+	clear
 	blue_prompt "Setting root password to '${PASSWORD}'"
 	arch_chroot "echo -e \"${PASSWORD}\n${PASSWORD}\" | passwd"
 	yellow_prompt "Root password has been set to '${PASSWORD}'"
@@ -121,6 +122,7 @@ read_input_text() {
 
 # SETUP MIRRORLIST{{{
 mirrorlist(){
+	clear
     local countries_name=("Australia" "Austria" "Belarus" "Belgium" "Brazil" "Bulgaria" "Canada" "Chile" "China" "Colombia" "Czech Republic" "Denmark" "Estonia" "Finland" "France" "Germany" "Greece" "Hungary" "India" "Ireland" "Israel" "Italy" "Japan" "Kazakhstan" "Korea" "Latvia" "Luxembourg" "Macedonia" "Netherlands" "New Caledonia" "New Zealand" "Norway" "Poland" "Portugal" "Romania" "Russian" "Serbia" "Singapore" "Slovakia" "South Africa" "Spain" "Sri Lanka" "Sweden" "Switzerland" "Taiwan" "Turkey" "Ukraine" "United Kingdom" "United States" "Uzbekistan" "Viet Nam")
     country_list(){
         blue_prompt "Select your country"
@@ -144,6 +146,7 @@ mirrorlist(){
 
 #INSTALL MIRRORLIST LIVE{{{
 install_mirrorlist_live(){
+	clear
     blue_prompt "Setting up mirrorlist on live cd"
     pacman -S reflector rsync --noconfirm --needed
     reflector --verbose --country "${MIRRORLIST_COUNTRY}" -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist
@@ -153,6 +156,7 @@ install_mirrorlist_live(){
 
 #INSTALL MIRRORLIST SYSTEM{{{
 install_mirrorlist_system(){
+	clear
 	blue_prompt "Setting up mirrorlist"
 	pacman_install "reflector rsync"
 	arch_chroot "reflector --verbose --country '${MIRRORLIST_COUNTRY}' -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist"
@@ -162,6 +166,7 @@ install_mirrorlist_system(){
 
 #INSTALL BASE{{{
 install_base(){
+	clear
 	blue_prompt "Installing the base system at mount point /mnt"
 	pacstrap /mnt base base-devel
 	yellow_prompt "Base install is complete"
@@ -170,6 +175,7 @@ install_base(){
 
 #GENERATE FSTAB{{{
 generate_fstab(){
+	clear
 	blue_prompt "Generating FSTAB"
 	genfstab -U -p /mnt >> /mnt/etc/fstab
 	blue_prompt "Now view FSTAB to check for errors"
@@ -180,6 +186,7 @@ generate_fstab(){
 
 #WIRELESS SOFTWARE{{{
 wireless_software(){
+	clear
 	blue_prompt "Installing wireless software"
 	pacman_install "iw wireless_tools wpa_actiond wpa_supplicant dialog"
 	yellow_prompt "Wireless software installed"
@@ -188,6 +195,7 @@ wireless_software(){
 
 #SET LOCALE{{{
 set_locale(){
+	 clear
 	blue_prompt "Setting system locale"
 	echo "${LOCALE_UTF8} UTF-8" > /mnt/etc/locale.gen
 	arch_chroot "locale-gen"
@@ -197,6 +205,7 @@ set_locale(){
 
 #SET LANG{{{
 set_lang(){
+	clear
 	blue_prompt "Setting system LANG"
 	echo "LANG=${LOCALE_UTF8}" > /mnt/etc/locale.conf
 	arch_chroot "export LANG=${LOCALE_UTF8}"
@@ -206,6 +215,7 @@ set_lang(){
 
 #SET LOCALTIME{{{
 set_localtime(){
+	clear
 	blue_prompt "Setting the system local timezone"
 	arch_chroot "ln -s /usr/share/zoneinfo/${ZONE}/${SUBZONE} /etc/localtime"
 	yellow_prompt "Timezone has been set"
@@ -214,6 +224,7 @@ set_localtime(){
 
 #SET HARDWARE CLOCK{{{
 set_hwclock(){
+	clear
 	blue_prompt "Setting the hardware clock"
 	arch_chroot "hwclock --systohc --utc"
 	yellow_prompt "Hardware clock has been set"
@@ -222,6 +233,7 @@ set_hwclock(){
 
 #SET HOSTNAME{{{
 set_hostname(){
+	clear
 	blue_prompt "Setting system hostname"
 	echo "${HOSTNAME}" > /mnt/etc/hostname
 	yellow_prompt "Hostname has been set"
@@ -233,6 +245,7 @@ set_hostname(){
 
 #EDIT SUDOERS{{{
 edit_sudoers(){
+	clear
 	blue_prompt "Edit sudoers file 'remove comment from wheel ALL=(ALL)'"
 	arch_chroot "EDITOR=nano visudo"
 	yellow_prompt "Sudoers file has been updated"
@@ -241,6 +254,7 @@ edit_sudoers(){
 
 #INSTALL GRUB{{{
 install_grub(){
+	clear
 	blue_prompt "Installing GRUB"
 	pacman_install "sudo grub os-prober"
 	arch_chroot "grub-install --target=i386-pc --recheck $BOOT_MOUNTPOINT"
@@ -251,6 +265,7 @@ install_grub(){
 
 #AUR SUPPORT{{{
 aur_support(){
+	clear
 	blue_prompt "Adding AUR and Multilib support"
 	echo "${MIRRORLIST_REPOS}" > /mnt/etc/pacman.conf
 	arch_chroot "pacman -Syy"
@@ -506,9 +521,10 @@ install_basics(){
 install_common_apps(){
 	clear
 	blue_prompt "Installing common applications and tools"
-	pacman_install "firefox bleachbit thunderbird vlc libbluray libdvdcss gimp jre8-openjdk"
+	pacman_install "vim firefox bleachbit thunderbird vlc libbluray libdvdcss gimp jre8-openjdk"
 	pacman_install  "libreoffice-fresh shotwell evince file-roller gparted uget deluge"
 	yaourt_install "dmenu2 google-chrome sublime-text-dev masterpdfeditor webstorm-eap phpstorm-eap dropbox dpkg"
+	user_chroot "curl http://j.mp/spf13-vim3 -L -o - | sh"
 	yellow_prompt "Applications and tools have been installed"
 }
 #}}}
