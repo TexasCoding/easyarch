@@ -90,6 +90,7 @@ set_root_password(){
 	clear
 	blue_prompt "Setting root password to '${PASSWORD}'"
 	arch_chroot "echo -e \"${PASSWORD}\n${PASSWORD}\" | passwd"
+	clear
 	yellow_prompt "Root password has been set to '${PASSWORD}'"
 
 }#}}}
@@ -99,6 +100,7 @@ add_user(){
 	blue_prompt "Creating user '${USER_NAME}' with password '${PASSWORD}'"
 	arch_chroot "useradd -m -g users -G wheel,storage,power,disk,sys  -s  /bin/bash ${USER_NAME}"
 	arch_chroot "echo -e \"${PASSWORD}\n${PASSWORD}\" | passwd \"${USER_NAME}\""
+	clear
 	yellow_prompt "User '${USER_NAME}' with password '${PASSWORD}' has been created"
 }
 #}}}
@@ -147,9 +149,10 @@ mirrorlist(){
 #INSTALL MIRRORLIST LIVE{{{
 install_mirrorlist_live(){
 	clear
-    blue_prompt "Setting up mirrorlist on live cd"
-    pacman -S reflector rsync --noconfirm --needed
-    reflector --verbose --country "${MIRRORLIST_COUNTRY}" -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist
+	blue_prompt "Setting up mirrorlist on live cd"
+	echo "${MIRRORLIST_REPOS}" > /etc/pacman.d/mirrorlist.backup
+	rankmirrors -n 6 /etc/pacman.d/mirrorlist.backup > /etc/pacman.d/mirrorlist
+	clear
     yellow_prompt "Mirrorlist is set on live cd"
 }
 #}}}
@@ -160,6 +163,7 @@ install_mirrorlist_system(){
 	blue_prompt "Setting up mirrorlist"
 	pacman_install "reflector rsync"
 	arch_chroot "reflector --verbose --country '${MIRRORLIST_COUNTRY}' -l 200 -p http --sort rate --save /etc/pacman.d/mirrorlist"
+	clear
 	yellow_prompt "Mirrorlist is set"
 }
 #}}}
@@ -179,7 +183,8 @@ generate_fstab(){
 	blue_prompt "Generating FSTAB"
 	genfstab -U -p /mnt >> /mnt/etc/fstab
 	blue_prompt "Now view FSTAB to check for errors"
-	nano /mnt/etc/fstab
+	vim /mnt/etc/fstab
+	clear
 	yellow_prompt "FSTAB generation completed"
 }
 #}}}
@@ -188,7 +193,8 @@ generate_fstab(){
 wireless_software(){
 	clear
 	blue_prompt "Installing wireless software"
-	pacman_install "iw wireless_tools wpa_actiond wpa_supplicant dialog"
+	pacman_install "vim iw wireless_tools wpa_actiond wpa_supplicant dialog"
+	clear
 	yellow_prompt "Wireless software installed"
 }
 #}}}
@@ -199,6 +205,7 @@ set_locale(){
 	blue_prompt "Setting system locale"
 	echo "${LOCALE_UTF8} UTF-8" > /mnt/etc/locale.gen
 	arch_chroot "locale-gen"
+	clear
 	yellow_prompt "Locale has been is set"
 }
 #}}}
@@ -209,6 +216,7 @@ set_lang(){
 	blue_prompt "Setting system LANG"
 	echo "LANG=${LOCALE_UTF8}" > /mnt/etc/locale.conf
 	arch_chroot "export LANG=${LOCALE_UTF8}"
+	clear
 	yellow_prompt "LANG has been set"
 }
 #}}}
@@ -218,6 +226,7 @@ set_localtime(){
 	clear
 	blue_prompt "Setting the system local timezone"
 	arch_chroot "ln -s /usr/share/zoneinfo/${ZONE}/${SUBZONE} /etc/localtime"
+	clear
 	yellow_prompt "Timezone has been set"
 }
 #}}}
@@ -227,6 +236,7 @@ set_hwclock(){
 	clear
 	blue_prompt "Setting the hardware clock"
 	arch_chroot "hwclock --systohc --utc"
+	clear
 	yellow_prompt "Hardware clock has been set"
 }
 #}}}
@@ -239,6 +249,7 @@ set_hostname(){
 	yellow_prompt "Hostname has been set"
 	blue_prompt "Setting hostname in /etc/hosts"
 	echo "${HOSTFILE}" > /mnt/etc/hosts
+	clear
 	yellow_prompt "/etc/hosts has been modified"
 }
 #}}}
@@ -247,7 +258,8 @@ set_hostname(){
 edit_sudoers(){
 	clear
 	blue_prompt "Edit sudoers file 'remove comment from wheel ALL=(ALL)'"
-	arch_chroot "EDITOR=nano visudo"
+	arch_chroot "visudo"
+	clear
 	yellow_prompt "Sudoers file has been updated"
 }
 #}}}
@@ -259,6 +271,7 @@ install_grub(){
 	pacman_install "sudo grub os-prober"
 	arch_chroot "grub-install --target=i386-pc --recheck $BOOT_MOUNTPOINT"
 	arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
+	clear
 	yellow_prompt "GRUB has been installed"
 }
 #}}}
@@ -270,6 +283,7 @@ aur_support(){
 	echo "${MIRRORLIST_REPOS}" > /mnt/etc/pacman.conf
 	arch_chroot "pacman -Syy"
 	pacman_install "yaourt rsync"
+	clear
 	yellow_prompt "AUR support has been enabled"
 }
 #}}}
@@ -283,6 +297,7 @@ git_install(){
 	user_chroot "git config --global user.name '${FULL_NAME}'"
 	user_chroot "git config --global user.email  '${EMAIL}'"
 	user_chroot "ssh-keygen -t rsa -C '${EMAIL}'"
+	clear
 	yellow_prompt "GIT has been installed"
 }
 #}}}
@@ -292,6 +307,7 @@ install_xorg(){
 	clear
 	blue_prompt "Install XORG to prepare for desktop"
 	pacman_install "xorg-server xorg-server-utils xorg-xinit xorg-twm xorg-xclock xterm"
+	clear
 	yellow_prompt "XORG has been installed"
 }
 #}}}
@@ -368,15 +384,19 @@ select_partition(){
 	done
 
 	if [[ $1 == "root" ]]; then
+		clear
 		blue_prompt "You are about to format $partition '/root' to ext4"
 		mkfs.ext4 $partition
 		ROOT_PARTITION=$partition
+		clear
 		yellow_prompt "$partition has been formatted to ext4"
 
 	elif [[ $1 == "swap" ]]; then
+		clear
 		blue_prompt "You are about to format $partition to swap"
 		mkswap $partition
 		swapon $partition
+		clear
 		yellow_prompt "$partition has been formatted to swap"
 	fi	
 }
@@ -404,14 +424,17 @@ video_driver_install(){
 	fi
 
 	if [[ ${VIDEO_DRIVER} == virtualbox ]]; then
+		clear
 		blue_prompt "Installing video drivers and Input synaptics"
 		pacman_install "xf86-video-vesa virtualbox-guest-utils virtualbox-guest-modules "
 		echo "${VBOX_GUEST}" > /mnt/etc/modules-load.d/virtualbox.conf
     		arch_chroot "gpasswd -a ${USER_NAME} vboxsf"
     		systemctl_enable "vboxservice"
 		pacman_install "xf86-input-synaptics xf86-input-keyboard xf86-input-mouse"
+		clear
 		yellow_prompt "Video drivers and Input synaptics has been setup"
 	elif [[ ${VIDEO_DRIVER} == bumblebee  ]]; then
+		clear
 		blue_prompt "Installing video drivers and Input synaptics"
 		pacman_install "bumblebee mesa xf86-video-intel nvidia"
 		pacman_install "bbswitch primus mesa-demos"
@@ -422,6 +445,7 @@ video_driver_install(){
 		blue_prompt "Enabling Bumblebee"
 		systemctl_enable "bumblebeed"
 		pacman_install "xf86-input-synaptics xf86-input-keyboard xf86-input-mouse"
+		clear
 		yellow_prompt "Video drivers and Input synaptics has been setup"
 	fi
 
@@ -438,6 +462,7 @@ dot_files_config(){
 	user_chroot "cp  ~/dotfiles/fonts.conf ~/"
 	
 	arch_chroot "rm -rf ~/dotfiles"
+	clear
 	yellow_prompt "dotfiles have been setup"
 }
 #}}}
@@ -449,6 +474,27 @@ gnome_install(){
 	pacman_install "gnome"
 	systemctl_enable "gdm"
 	install_networkmanager
+	clear
+	yellow_prompt "GNOME has been installed"
+}
+#}}}
+
+#KDE INSTALL{{{
+kde_install(){
+	clear
+	blue_prompt "Installing KDE Plasma Desktop"
+	pacman_install "plasma"
+	pacman_install "sddm"
+	systemctl_enable "sddm"
+	install_networkmanager
+	clear
+	blue_prompt "Installing fonts and icons"
+	pacman_install "ttf-dejavu ttf-liberation ttf-freefont ttf-bitstream-vera elementary-icon-theme adobe-source-sans-pro-fonts adobe-source-code-pro-fonts adobe-source-serif-pro-fonts"
+	clear
+	yellow_prompt "Fonts and icons are installed"
+	blue_prompt "Now installing fonts and basic applications"
+	pacman_install "dmidecode wget bash-completion vim hddtemp lm_sensors smartmontools terminus-font btrfs-progs dosfstools exfat-utils f2fs-tools gpart jfsutils mtools nilfs-utils ntfs-3g reiserfsprogs xfsprogs terminator unzip zip p7zip unrar gvfs udisks imagemagick"
+	yellow_prompt "Basic applications installed"
 }
 #}}}
 
@@ -460,7 +506,20 @@ install_tlp(){
 	systemctl_enable "tlp"
 	systemctl_enable "tlp-sleep"
 	systemctl_mask "systemd-rfkill@"
+	clear
 	yellow_prompt "TLP is installed and enabled"
+}
+#}}}
+
+#INSTALL NODEJS{{{
+install_nodejs(){
+	clear
+	blue_prompt "Installing NodeJs and NPM"
+	pacman_install "nodejs npm"
+	user_chroot "mkdir ~/.npm-global"
+	user_chroot "npm config set prefix '~/.npm-global'"
+	clear
+	yellow_prompt "NodeJs has been installed"
 }
 #}}}
 
@@ -470,6 +529,7 @@ install_preload(){
 	blue_prompt "Installing PreLoad"
 	yaourt_install "preload"
 	systemctl_enable "preload"
+	clear
 	yellow_prompt "PreLoad has been installed"
 }
 #}}}
@@ -481,7 +541,7 @@ install_audio_drivers(){
 	pacman_install "alsa-utils alsa-plugins"
 	pacman_install "pulseaudio pulseaudio-alsa"
 	pacman_install "lib32-libpulse lib32-alsa-plugins"
-	pacman_install "pavucontrol"
+	clear
 	yellow_prompt "Audio drivers installed"
 }
 #}}}
@@ -490,7 +550,7 @@ install_audio_drivers(){
 install_themes_fonts_icons(){
 	clear
 	blue_prompt "Installing themes fonts and icons"
-	pacman_install "ttf-dejavu ttf-liberation ttf-freefont ttf-bitstream-vera elementary-icon-theme adobe-source-sans-pro-fonts adobe-source-code-pro-fonts adobe-source-serif-pro-fonts gtk-theme-arc gnome-icon-theme"
+	pacman_install "ttf-dejavu ttf-liberation ttf-freefont ttf-bitstream-vera elementary-icon-theme adobe-source-sans-pro-fonts adobe-source-code-pro-fonts adobe-source-serif-pro-fonts arc-gtk-theme gnome-icon-theme"
 	yellow_prompt "Themes fonts and icon have been installed"
 }
 #}}}
@@ -502,6 +562,7 @@ install_networkmanager(){
 	pacman_install "networkmanager modemmanager usb_modeswitch network-manager-applet"
 	systemctl_enable "NetworkManager"
 	systemctl_enable "ModemManager"
+	clear
 	yellow_prompt "NetworkManager has been installed and enabled"
 }
 #}}}
@@ -523,8 +584,9 @@ install_common_apps(){
 	blue_prompt "Installing common applications and tools"
 	pacman_install "vim firefox bleachbit thunderbird vlc libbluray libdvdcss gimp jre8-openjdk"
 	pacman_install  "libreoffice-fresh shotwell evince file-roller gparted uget deluge"
-	yaourt_install "dmenu2 google-chrome sublime-text-dev masterpdfeditor webstorm-eap phpstorm-eap dropbox dpkg"
+	yaourt_install "google-chrome-dev sublime-text-dev masterpdfeditor dropbox-experimental dpkg"
 	user_chroot "curl http://j.mp/spf13-vim3 -L -o - | sh"
+	clear
 	yellow_prompt "Applications and tools have been installed"
 }
 #}}}
@@ -534,6 +596,7 @@ mkinitcpio_run(){
 	clear
 	blue_prompt "Running MKINITCPIO"
 	arch_chroot "mkinitcpio -p linux"
+	clear
 	yellow_prompt "MKINITCPIO completed"
 }
 #}}}

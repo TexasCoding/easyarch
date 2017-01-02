@@ -1,5 +1,4 @@
 #! /bin/bash
-pacman -Sy dmidecode git --noconfirm --needed
 
 # COLORS {{{
     Bold=$(tput bold)
@@ -78,15 +77,29 @@ base_install(){
 #FRONT INSTALL{{{
 front_install(){
     clear
+
+    echo "(1) KDE Plasma"
+    echo "(2) GNOME"
+    echo "${BCyan}Enter the number of the desktop enviroment you wish to install:${Reset}"
+    read DESKTOP_INSTALL
+
     git_install
     dot_files_config
-    install_basics
     aur_support
     install_xorg
     video_driver_install
-    install_audio_drivers
     install_common_apps
-    gnome_install
+    install_audio_drivers
+
+    if [[ $DESKTOP_INSTALL == 1 ]]; then
+        kde_install
+    fi
+    if [[ $DESKTOP_INSTALL == 2 ]]; then
+        gnome_install
+        install_basics
+    fi
+
+    install_nodejs
     install_tlp
     install_preload
 }
