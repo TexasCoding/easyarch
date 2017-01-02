@@ -1,7 +1,6 @@
 #! /bin/bash
 
 if [[ -f $(pwd)/files ]]; then
-  # shellcheck disable=SC1091
   source files
 else
   echo "missing file: files"
@@ -40,7 +39,7 @@ fi
 #}}}
 
 
-#ARCH-CHRROT{{{
+#ARCH-CHROOT{{{
 arch_chroot() { 
 	arch-chroot /mnt /bin/bash -c "$1"
 }
@@ -92,8 +91,8 @@ set_root_password(){
 	arch_chroot "echo -e \"${PASSWORD}\n${PASSWORD}\" | passwd"
 	clear
 	yellow_prompt "Root password has been set to '${PASSWORD}'"
-
-}#}}}
+}
+#}}}
 
 #ADD USER{{{
 add_user(){
@@ -677,4 +676,5 @@ getkeymap() {
 	    read_input_text "Confirm timezone: ${ZONE}/${SUBZONE}"
 	done
 	
-  } #}}}
+  } 
+  #}}}
