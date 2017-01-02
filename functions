@@ -149,7 +149,7 @@ mirrorlist(){
 install_mirrorlist_live(){
 	clear
 	blue_prompt "Setting up mirrorlist on live cd"
-	echo "${MIRRORLIST_REPOS}" > /etc/pacman.d/mirrorlist.backup
+	echo "${MIRROR_LIST}" > /etc/pacman.d/mirrorlist.backup
 	rankmirrors -n 6 /etc/pacman.d/mirrorlist.backup > /etc/pacman.d/mirrorlist
 	clear
     yellow_prompt "Mirrorlist is set on live cd"
