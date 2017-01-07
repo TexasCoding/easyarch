@@ -470,7 +470,7 @@ dot_files_config(){
 lightdm_install(){
 	clear 
 	blue_prompt "Installing LightDM Display Manager"
-	pacman_install "lightdm light-gtk-greeter"
+	pacman_install "lightdm lightdm-gtk-greeter"
 	systemctl_enable "lightdm"
 	clear
 	yellow_prompt "LightDM has been installed"

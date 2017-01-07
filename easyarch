@@ -81,7 +81,7 @@ front_install(){
     echo "(1) KDE Plasma"
     echo "(2) GNOME"
     echo "(3) Budgie Desktop"
-    echo "(3) Cinnamon Desktop"
+    echo "(4) Cinnamon Desktop"
     echo "${BCyan}Enter the number of the desktop enviroment you wish to install:${Reset}"
     read DESKTOP_INSTALL
 
@@ -102,6 +102,10 @@ front_install(){
     fi
     if [[ $DESKTOP_INSTALL == 3 ]]; then
         budgie_install
+        install_basics
+    fi
+    if [[ $DESKTOP_INSTALL == 4 ]]; then
+        cinnamon_install
         install_basics
     fi
 
