@@ -466,15 +466,51 @@ dot_files_config(){
 }
 #}}}
 
+#LIGHTDM INSTALL{{{
+lightdm_install(){
+	clear 
+	blue_prompt "Installing LightDM Display Manager"
+	pacman_install "lightdm light-gtk-greeter"
+	systemctl_enable "lightdm"
+	clear
+	yellow_prompt "LightDM has been installed"
+}
+#}}}
+
 #GNOME INSTALL{{{
 gnome_install(){
 	clear
 	blue_prompt "Installing Gnome Desktop Enviroment"
-	pacman_install "gnome"
+	pacman_install "gnome gnome-tweak-tool"
 	systemctl_enable "gdm"
 	install_networkmanager
 	clear
 	yellow_prompt "GNOME has been installed"
+}
+#}}}
+
+#BUDGIE INSTALL{{{
+budgie_install(){
+	clear
+	blue_prompt "Installing Budgie Desktop Enviroment"
+	yaourt_install "budgie-desktop-git"
+	install_networkmanager
+	pacman_install "gnome-backgrounds gnome-control-center gnome-screensaver network-manager-applet"
+	lightdm_install
+	clear
+	yellow_prompt "Budgie Desktop has been installed"
+}
+#}}}
+
+#CINNAMON INSTALL{{{
+cinnamon_install(){
+	clear
+	blue_prompt "Installing Cinnamon Desktop Enviroment"
+	pacman_install "cinnamon"
+	install_networkmanager
+	lightdm_install
+	clear
+	yellow_prompt "Cinnamon Desktop has been installed"
 }
 #}}}
 
@@ -570,7 +606,7 @@ install_networkmanager(){
 install_basics(){
 	clear
 	blue_prompt "Installing basis applications."
-	pacman_install "dmidecode wget bash-completion vim hddtemp lm_sensors smartmontools terminus-font btrfs-progs dosfstools exfat-utils f2fs-tools gpart jfsutils mtools nilfs-utils ntfs-3g reiserfsprogs xfsprogs terminator unzip zip p7zip unrar gvfs udisks imagemagick gnome-tweak-tool"
+	pacman_install "dmidecode wget bash-completion vim hddtemp lm_sensors smartmontools terminus-font btrfs-progs dosfstools exfat-utils f2fs-tools gpart jfsutils mtools nilfs-utils ntfs-3g reiserfsprogs xfsprogs terminator unzip zip p7zip unrar gvfs udisks imagemagick"
 	blue_prompt "Installing fonts."
 	pacman_install "ttf-dejavu ttf-liberation ttf-freefont ttf-bitstream-vera adobe-source-sans-pro-fonts adobe-source-code-pro-fonts adobe-source-serif-pro-fonts gnome-icon-theme"
 	yellow_prompt "Basic applications and fonts have been installed"
@@ -581,9 +617,9 @@ install_basics(){
 install_common_apps(){
 	clear
 	blue_prompt "Installing common applications and tools"
-	pacman_install "vim firefox bleachbit thunderbird vlc libbluray libdvdcss gimp jre8-openjdk"
+	pacman_install "vim firefox bleachbit thunderbird vlc libbluray libdvdcss gimp jre8-openjdk ruby"
 	pacman_install  "libreoffice-fresh shotwell evince file-roller gparted uget deluge"
-	yaourt_install "google-chrome-dev sublime-text-dev masterpdfeditor dropbox-experimental dpkg"
+	yaourt_install "google-chrome-dev  sublime-text-dev masterpdfeditor dropbox-experimental webstorm-eap"
 	user_chroot "curl http://j.mp/spf13-vim3 -L -o - | sh"
 	clear
 	yellow_prompt "Applications and tools have been installed"
